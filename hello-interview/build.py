@@ -135,11 +135,11 @@ class EpubBuilder:
                 '-f', 'markdown+smart',
                 '-t', 'epub3',
                 '--toc',
-                '--toc-depth=3',
+                '--toc-depth=2',
                 '--resource-path', ":".join(str(f.parent) for f in content_files),  # Add resource path
                 '-o', str(self.output_dir / 'book.epub'),
                 str(self.metadata_file),
-                str(toc_file)
+                # str(toc_file)
             ]
 
             # Add all content files to command
