@@ -128,7 +128,7 @@ class EpubBuilder:
             # Prepare all files in temporary directory
             content_files = self.prepare_temp_directory()
 
-            toc_file = self.generate_toc()
+            # toc_file = self.generate_toc()
             # Prepare pandoc command
             cmd = [
                 'pandoc',
