@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-import os
 import subprocess
 import re
 import shutil
 from pathlib import Path
-from collections import OrderedDict
 
 class EpubBuilder:
     def __init__(self):
@@ -80,7 +78,7 @@ class EpubBuilder:
 
     def get_section_title(self, section_dir):
         """Extract section title from directory name."""
-        clean_name = re.sub(r'^section\d+-', '', section_dir.name)
+        clean_name = re.sub(r'^\d+-', '', section_dir.name)
         return clean_name.replace('-', ' ').title()
 
     def generate_toc(self):
@@ -129,8 +127,8 @@ class EpubBuilder:
         try:
             # Prepare all files in temporary directory
             content_files = self.prepare_temp_directory()
+
             toc_file = self.generate_toc()
-            
             # Prepare pandoc command
             cmd = [
                 'pandoc',
@@ -138,15 +136,12 @@ class EpubBuilder:
                 '-t', 'epub3',
                 '--toc',
                 '--toc-depth=3',
-                '--resource-path', str(self.temp_dir),  # Add resource path
+                '--resource-path', ":".join(str(f.parent) for f in content_files),  # Add resource path
                 '-o', str(self.output_dir / 'book.epub'),
                 str(self.metadata_file),
                 str(toc_file)
             ]
-            
-            print("🔨 Building epub...")
-            print(cmd)
-            
+
             # Add all content files to command
             cmd.extend(str(f) for f in content_files)
             
