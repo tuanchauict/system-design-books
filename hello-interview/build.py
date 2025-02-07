@@ -4,6 +4,8 @@ import re
 import shutil
 from pathlib import Path
 
+image_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.svg'}
+
 class EpubBuilder:
     def __init__(self):
         self.project_dir = Path('.')
@@ -33,76 +35,11 @@ class EpubBuilder:
         """Get all section directories in sorted order."""
         return sorted(d for d in self.content_dir.iterdir() if d.is_dir())
 
-    def get_chapters(self, section_dir):
-        """Get all chapter directories in sorted order."""
-        return sorted(f for f in section_dir.iterdir() if f.is_dir() or f.suffix.lower() == '.md')
-
-    def get_chapter_files(self, parent_dir):
-        """Get all markdown files from a section directory in order."""
-        return sorted(parent_dir.glob('*.md'))
-
-    def get_image_files(self, section_dir):
-        """Get all image files from a section directory."""
-        image_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.svg'}
-        return [f for f in section_dir.iterdir() if f.suffix.lower() in image_extensions]
-
     def copy_images(self, section_dir, temp_section_dir):
         """Copy images to temporary directory."""
-        for image_file in self.get_image_files(section_dir):
+        image_files = [f for f in section_dir.iterdir() if f.suffix.lower() in image_extensions]
+        for image_file in image_files:
             shutil.copy2(image_file, temp_section_dir)
-
-    def copy_and_adjust_chapter(self, chapter_file, temp_section_dir):
-        """Copy chapter file and ensure image paths are correct."""
-        # Read the original content
-        with open(chapter_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-
-        # Write to new location in temp directory
-        temp_chapter_file = temp_section_dir / chapter_file.name
-        with open(temp_chapter_file, 'w', encoding='utf-8') as f:
-            f.write(content)
-
-        return temp_chapter_file
-
-    def extract_title(self, md_file):
-        """Extract title from markdown file's first heading."""
-        try:
-            with open(md_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-                match = re.search(r'^#\s+(.+)$', content, re.MULTILINE)
-                if match:
-                    return match.group(1).strip()
-                
-                filename = md_file.stem
-                clean_name = re.sub(r'^\d+-', '', filename)
-                return clean_name.replace('-', ' ').title()
-        except Exception as e:
-            print(f"Warning: Could not extract title from {md_file}: {e}")
-            return md_file.stem
-
-    def get_section_title(self, section_dir):
-        """Extract section title from directory name."""
-        clean_name = re.sub(r'^\d+-', '', section_dir.name)
-        return clean_name.replace('-', ' ').title()
-
-    def generate_toc(self):
-        """Generate table of contents markdown file."""
-        toc_content = ["# Table of Contents\n"]
-        
-        for section_dir in self.get_section_dirs():
-            section_title = self.get_section_title(section_dir)
-            toc_content.append(f"\n## {section_title}\n")
-            
-            temp_section_dir = self.temp_dir / section_dir.name
-            for chapter_file in self.get_chapter_files(section_dir):
-                chapter_title = self.extract_title(chapter_file)
-                relative_path = (temp_section_dir / chapter_file.name).relative_to(self.temp_dir)
-                toc_content.append(f"- [{chapter_title}]({relative_path})")
-
-        with open(self.temp_toc_file, 'w', encoding='utf-8') as f:
-            f.write('\n'.join(toc_content))
-
-        return self.temp_toc_file
 
     def prepare_temp_directory(self):
         """Prepare temporary directory with all necessary files."""
@@ -110,30 +47,25 @@ class EpubBuilder:
         self.create_directories()
         
         temp_files = []
+
+        def handle(file, parent_temp_dir):
+            print(f"Handling {file} {file.is_file()}")
+            if file.is_file():
+                temp_file = parent_temp_dir / file.name
+                shutil.copy2(file, temp_file)
+                temp_files.append(temp_file)
+            else:
+                temp_subdir = parent_temp_dir / file.name
+                temp_subdir.mkdir(exist_ok=True)
+                self.copy_images(file, temp_subdir)
+                sub_sections = sorted(f for f in file.iterdir() if f.is_dir() or f.suffix.lower() == '.md')
+                for subfile in sub_sections:
+                    # Recursively handle subdirectories
+                    handle(subfile, temp_subdir)
         
         # Process each section
         for section_dir in self.get_section_dirs():
-            temp_section_dir = self.temp_dir / section_dir.name
-            temp_section_dir.mkdir(exist_ok=True)
-            
-            # Copy images first
-            self.copy_images(section_dir, temp_section_dir)
-
-            for chapter_f in self.get_chapters(section_dir):
-                print(f"Processing {chapter_f} {chapter_f.is_file()}")
-                if chapter_f.is_file():
-                    temp_chapter = self.copy_and_adjust_chapter(chapter_f, temp_section_dir)
-                    temp_files.append(temp_chapter)
-                else:
-                    temp_chapter_dir = temp_section_dir / chapter_f.name
-                    temp_chapter_dir.mkdir(exist_ok=True)
-                    # Copy images first
-                    self.copy_images(chapter_f, temp_chapter_dir)
-
-                    # Process chapters
-                    for chapter_file in self.get_chapter_files(chapter_f):
-                        temp_chapter = self.copy_and_adjust_chapter(chapter_file, temp_chapter_dir)
-                        temp_files.append(temp_chapter)
+            handle(section_dir, self.temp_dir)
         
         return temp_files
 
@@ -143,7 +75,6 @@ class EpubBuilder:
             # Prepare all files in temporary directory
             content_files = self.prepare_temp_directory()
 
-            # toc_file = self.generate_toc()
             # Prepare pandoc command
             cmd = [
                 'pandoc',
@@ -154,7 +85,6 @@ class EpubBuilder:
                 '--resource-path', ":".join(str(f.parent) for f in content_files),  # Add resource path
                 '-o', str(self.output_dir / 'book.epub'),
                 str(self.metadata_file),
-                # str(toc_file)
             ]
 
             # Add all content files to command
@@ -173,19 +103,7 @@ class EpubBuilder:
             )
 
             print("✅ Successfully built epub!")
-            
-            # Print structure information
-            print("\n📚 Book Structure:")
-            for section_dir in self.get_section_dirs():
-                section_title = self.get_section_title(section_dir)
-                print(f"\n📑 Section: {section_title}")
-                for chapter in self.get_chapter_files(section_dir):
-                    chapter_title = self.extract_title(chapter)
-                    print(f"  📄 {chapter_title}")
-                images = self.get_image_files(section_dir)
-                if images:
-                    print(f"  🖼️ Images: {', '.join(img.name for img in images)}")
-            
+
             # Cleanup
             self.cleanup_temp_dir()
             return True
