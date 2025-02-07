@@ -87,7 +87,7 @@ DynamoDB tables are defined by a primary key, which can consist of one or two at
 2. **Sort Key** (Optional) - An additional attribute that, when combined with the partition key, forms a composite primary key. The sort key is used to order items with the same partition key value, enabling efficient range queries and sorting within a partition.
     
 
-![Primary Key](06-dynamodb-pk.png)
+![Primary Key](dynamodb-0.png)
 
 
 In an interview, you'll want to be sure to specify the partition key and, optionally, a sort key when introducing DynamoDB. This choice is important for optimizing query performance and data retrieval efficiency. Just like with any other database, you'll choose a partition key that optimizes for the most common query patterns in your application and keeping data evenly distributed across partitions. In the case you need to perform range queries or sorting, you'll want to also specify the Sort Key.
@@ -134,11 +134,11 @@ Practically, in both cases, these indexes are just configured in the AWS console
 
 You'll want to introduce a GSI in situations where you need to query data efficiently by an attribute that isn't the partition key. For example, if you have a chat table with messages for your chat application, then your main table's partition key would likely be `chat_id` with a sort key on `message_id`. This way, you can easily get all messages for a given chat sorted by time. But what if you want to show users all the messages they've sent across all chats? Now you'd need a GSI with a partition key of `user_id` and a sort key of `message_id`.
 
-![GSI](06-dynamodb-gsi.png)
+![GSI](dynamodb-1.png)
 
 LSIs are useful when you need to perform range queries or sorting within a partition on a different attribute than the sort key. Going back to our chat application, we already can sort by message_id within a chat group, but what if we want to query messages with the most attachments within a chat group? We could create an LSI on the num_attachments attribute to facilitate those queries and quickly find messages with many attachments.
 
-![LSI](06-dynamodb-lsi.png)
+![LSI](dynamodb-2.png)
 
 
 
@@ -382,7 +382,7 @@ DAX is a caching service designed to enhance DynamoDB performance by delivering 
 
 It operates as both a read-through and write-through cache, which means it automatically caches read results from DynamoDB tables and delivers them directly to applications, as well as writes data to both the cache and the underlying DynamoDB table. Cached items are invalidated when the corresponding data in the table is updated or when the cache reaches its size limit. For more details on DAX's read-through and write-through capabilities, you can refer to [this AWS blog post](https://aws.amazon.com/blogs/database/amazon-dynamodb-accelerator-dax-a-read-throughwrite-through-cache-for-dynamodb/).
 
-![DAX](06-dynamodb-dax.png)
+![DAX](dynamodb-3.png)
 
 
 DAX can be configured as either an item cache or a query cache. An item cache stores the results of `GetItem` operations, while a query cache stores the results of `Query` and `Scan` operations. Similar to DynamoDB, DAX can also be configured for either eventual or strong consistency to meet your system's specific requirements.

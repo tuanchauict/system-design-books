@@ -8,7 +8,7 @@ There's two hops we have to be concerned with to make this happen: the connectio
 
 ClientServerUpdatesStep 1How do updates propagate to clients?Step 2How does our server get triggeredwhen updates happen?Realtime Updates
 
-Two Hops for Real-time Updates
+![Two Hops for Real-time Updates](realtime-updates-0.png)
 
 _How_ this happens is an important part of system design - facilitating these real-time updates can have significant implications for your overall architecture and is often the source of interesting deep-dive interview questions ([Uber](https://www.hellointerview.com/learn/system-design/problem-breakdowns/uber), [Live Comments](https://www.hellointerview.com/learn/system-design/problem-breakdowns/fb-live-comments), [Whatsapp](https://www.hellointerview.com/learn/system-design/problem-breakdowns/whatsapp), [Google Docs](https://www.hellointerview.com/learn/system-design/problem-breakdowns/google-docs), etc.). For mid-level engineers, this is frequently a bonus and will help set you apart from other candidates. For staff level engineers, some familiarity is expected.
 
@@ -42,7 +42,7 @@ These layers work together to enable all our network communications. To see how 
 
 When you type a URL into your browser, several layers of networking protocols spring into action. Let's break down how these layers work together to retrieve a simple web page over HTTP. First, we use DNS to convert a human-readable domain name like hellointerview.com into an IP address like 32.42.52.62. Then, a series of carefully orchestrated steps begins:
 
-![Simple HTTP Request](08-ru-http-request.png)
+![Simple HTTP Request](realtime-updates-1.png)
 
 1. **DNS Resolution**: The client starts by resolving the domain name of the website to an IP address using DNS (Domain Name System)[1](https://www.hellointerview.com/learn/system-design/deep-dives/realtime-updates#user-content-fn-dns).
     
@@ -98,7 +98,7 @@ These will have some implications for decisions we'll make later, but let's brie
 
 Layer 4 load balancers operate at the transport layer (TCP/UDP). They make routing decisions based on network information like IP addresses and ports, without looking at the actual content of the packets. The effect of a L4 load balancer is as-if you randomly selected a backend server and assumed that TCP connections were established directly between the client that server — this mental model is not far off.
 
-![Simple HTTP Request with L4 Load Balancer](08-ru-http-request-2.png)
+![Simple HTTP Request with L4 Load Balancer](realtime-updates-2.png)
 
 Key characteristics of L4 load balancers:
 
@@ -117,7 +117,7 @@ For example, if a client establishes a TCP connection through an L4 load balance
 
 Layer 7 load balancers operate at the application layer, understanding protocols like HTTP. They can examine the actual content of each request and make more intelligent routing decisions.
 
-![Simple HTTP Request with L7 Load Balancer](08-ru-http-request-l7.png)
+![Simple HTTP Request with L7 Load Balancer](realtime-updates-3.png)
 
 Key characteristics of L7 load balancers:
 
@@ -247,7 +247,7 @@ async function longPoll() {
 
 The simplicity of the approach hides an important trade-off for high-frequency updates. Since the client needs to "call back" to the server after each receipt, the approach can introduce some extra latency:
 
-![Long Polling Latency](08-ru-long-pulling.png)
+![Long Polling Latency](realtime-updates-4.png)
 
 > _Assume the latency between the client and server is 100ms._
 
@@ -450,7 +450,7 @@ Finally, balancing load across websocket servers can be more complex. If the con
 
 Because of all the issues associated with _stateful_ connections, many architectures will terminate WebSockets into a WebSocket service early in their infrastructure. This service can then handle the connection management and scaling concerns and allows the rest of the system to remain _stateless_. The WebSocket service is also less likely to change meaning it requires less deployments which churn connections.
 
-![WebSocket Reference Architecture](08-ru-websocket.png)
+![WebSocket Reference Architecture](realtime-updates-5.png)
 
 ##### Advantages
 
@@ -503,7 +503,7 @@ The WebRTC standard includes two methods to work around these restrictions:
 - **TURN**: "Traversal Using Relays around NAT" is effectively a relay service, a way to bounce requests through a central server which can then be routed to the appropriate peer.
     
 
-![WebRTC Setup](08-ru-web-rtc.png)
+![WebRTC Setup](realtime-updates-6.png)
 
 In practice, the signaling server is relatively lightweight and isn't handling much of the bandwidth as the bulk of the traffic is handled by the peer-to-peer connections. But interestingly the signaling server does effectively act as a real-time update system for its clients (so they can find their peers and update their connection info) so it either needs to utilize WebSockets, SSE, or some other approach detailed above.
 
@@ -600,7 +600,7 @@ There are a lot of options for delivering events from the server to the client. 
 - Finally, if you need to do audio/video calls, **WebRTC** is the only way to go. In some instances peer-to-peer collaboration can be enhanced with WebRTC, but you're unlikely to see it in a system design interview.
     
 
-![Client Updates Flowchart](08-ru-client-update.png)
+![Client Updates Flowchart](realtime-updates-7.png)
 
 But now that we have the first hop out of the way, let's talk about how updates propagate from their source to the server in question.
 
@@ -608,7 +608,7 @@ But now that we have the first hop out of the way, let's talk about how updates 
 
 Now that we've established our options for the hop from server to client (Simple Polling, Long-Polling, SSE, WebSockets, WebRTC), let's talk about how we can propagate updates from the source to the server.
 
-![Server-Side Push/Pull](08-ru-server.png)
+![Server-Side Push/Pull](realtime-updates-8.png)
 
 Invariably our system is somehow _producing_ updates that we want to propagate to our clients. This could be other users making edits to a shared documents, drivers making location updates, or friends sending messages to a shared chat.
 
@@ -627,7 +627,7 @@ When it comes to triggering, there's three patterns that you'll commonly see:
 
 With Simple Polling, we're using a **pull-based** model. Our client is constantly asking the server for updates and the server needs to maintain the state necessary to respond to those requests. The most common way to do this is to have a database where we can store the updates (e.g. all of the messages in the chat room), and from this database our clients can pull the updates they need when they can. For our chat app, we'd basically be polling for "what messages have been sent to the room with a timestamp larger than the last message I received?".
 
-![Pulling with Simple Polling](08-ru-pulling.png)
+![Pulling with Simple Polling](realtime-updates-9.png)
 
 Remember with polling we're tolerating delay! We use the poll itself as the trigger, even though the actual update may have occurred some time prior.
 
@@ -667,7 +667,7 @@ The remaining approaches involve **pushing** updates to the clients. In many of 
 
 But this creates a problem! For our chat application, in order to send a message to `User C`, we need to know which server they are connected to.
 
-![Push Problems](08-ru-push-problem.png)
+![Push Problems](realtime-updates-10.png)
 
 Ideally, when an a message needs to be sent, I would:
 
@@ -692,7 +692,7 @@ We'll make the server number n responsible for user n % N. When clients initiall
 
 User AUser BUser CServer 1Server 21) I'm trying to connect for User A2) You should talkto Server 23) Let's exchange data!Zookeeper
 
-![Connecting to the Right Server](08-ru-connecting-to-right-server.png)
+![Connecting to the Right Server](realtime-updates-11.png)
 
 When a client connects, the following happens:
 
@@ -711,7 +711,7 @@ Now we're ready to send updates and messages!
 
 When we want to send messages to `User C`, we can simply hash the user's id to figure out which server is responsible for them and send the message there.
 
-![Sending Updates to the Right Server](08-ru-sending-right-server.png)
+![Sending Updates to the Right Server](realtime-updates-12.png)
 
 1. Our Update Server stays connected to Zookeeper and knows the addresses of all servers and the modulo N.
     
@@ -732,13 +732,13 @@ All this to say that moving connections between servers is expensive and should 
 
 Consistent Hashing is the solution. Consistent Hashing provides a way to map users to servers in a way that minimizes the number of re-mappings when we scale our service. The simplest way to think of this is that our hash function puts the servers onto a circle or ring.
 
-![Consistent Hash Ring](08-ru-cons-hash.png)
+![Consistent Hash Ring](realtime-updates-13.png)
 
 By mapping our servers onto a ring, we can add or remove servers while minimizing the number of re-mappings. When we add a new server, we simply move the server's position clockwise around the ring. When we remove a server, we move the server's position counter-clockwise. This maximizes the number of entities that are mapped to the same server when we're changing the number of servers!
 
 When we remove a server, we're only needed to relocate the entities that are on the "edge" of the ring segment associated with that server.
 
-[Consistent Hash Ring](08-ru-cons-hash-2.png)
+![Consistent Hash Ring](realtime-updates-14.png)
 
 ##### Advantages
 
@@ -797,7 +797,7 @@ The pub/sub service becomes the biggest source of _state_ for our realtime updat
 
 When clients connect, we don't need them to connect to a specific endpoint server (like we did with consistent hashing) and instead can connect to any of them. Once connected, the endpoint server will register the client with the pub/sub server so that any updates can be sent to them.
 
-![Pub/Sub](08-ru-pubsub.png)
+![Pub/Sub](realtime-updates-15.png)
 
 
 On the connection side, the following happens:
@@ -807,7 +807,7 @@ On the connection side, the following happens:
 2. The endpoint server registers the client with the Pub/Sub service, often by creating a topic, subscribing to it, and keeping a mapping from topics to the connections associated with them.
 
 
-![Pub/Sub Message Sending](08-ru-pubsub2.png)
+![Pub/Sub Message Sending](realtime-updates-16.png)
 
 On the update broadcasting side, the following happens:
 
