@@ -33,9 +33,13 @@ class EpubBuilder:
         """Get all section directories in sorted order."""
         return sorted(d for d in self.content_dir.iterdir() if d.is_dir())
 
-    def get_chapter_files(self, section_dir):
+    def get_chapters(self, section_dir):
+        """Get all chapter directories in sorted order."""
+        return sorted(f for f in section_dir.iterdir() if f.is_dir() or f.suffix.lower() == '.md')
+
+    def get_chapter_files(self, parent_dir):
         """Get all markdown files from a section directory in order."""
-        return sorted(section_dir.glob('*.md'))
+        return sorted(parent_dir.glob('*.md'))
 
     def get_image_files(self, section_dir):
         """Get all image files from a section directory."""
@@ -114,11 +118,22 @@ class EpubBuilder:
             
             # Copy images first
             self.copy_images(section_dir, temp_section_dir)
-            
-            # Process chapters
-            for chapter_file in self.get_chapter_files(section_dir):
-                temp_chapter = self.copy_and_adjust_chapter(chapter_file, temp_section_dir)
-                temp_files.append(temp_chapter)
+
+            for chapter_f in self.get_chapters(section_dir):
+                print(f"Processing {chapter_f} {chapter_f.is_file()}")
+                if chapter_f.is_file():
+                    temp_chapter = self.copy_and_adjust_chapter(chapter_f, temp_section_dir)
+                    temp_files.append(temp_chapter)
+                else:
+                    temp_chapter_dir = temp_section_dir / chapter_f.name
+                    temp_chapter_dir.mkdir(exist_ok=True)
+                    # Copy images first
+                    self.copy_images(chapter_f, temp_chapter_dir)
+
+                    # Process chapters
+                    for chapter_file in self.get_chapter_files(chapter_f):
+                        temp_chapter = self.copy_and_adjust_chapter(chapter_file, temp_chapter_dir)
+                        temp_files.append(temp_chapter)
         
         return temp_files
 
