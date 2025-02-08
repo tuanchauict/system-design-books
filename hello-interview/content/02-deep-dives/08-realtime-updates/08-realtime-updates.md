@@ -24,16 +24,16 @@ Before diving into the different protocols for facilitating real-time updates, i
 
 In networks, each layer builds on the **abstractions** of the previous one. This way, when you're requesting a webpage, you don't need to know which voltages represent a 1 or a 0 on the network wire - you just need to know how to use the next layer down the stack. While the full networking stack is fascinating, there are three key layers that come up most often in system design interviews:
 
-- **Network Layer (Layer 3):** At this layer is IP, the protocol that handles routing and addressing. It's responsible for breaking the data into packets, handling packet forwarding between networks, and providing best-effort delivery to any destination IP address on the network. However, there are no guarantees: packets can get lost, duplicated, or reordered along the way.
+- **Network Layer (Layer 3):** At this layer is IP, the protocol that handles routing and addressing. It's responsible for breaking the data into packets, handling packet forwarding between networks, and providing best-effort delivery to any destination IP address on the network. However, there are no guarantees: packets can get lost, duplicated, or reordered along the way.
     
-- **Transport Layer (Layer 4):** At this layer, we have TCP and UDP, which provide end-to-end communication services:
+- **Transport Layer (Layer 4):** At this layer, we have TCP and UDP, which provide end-to-end communication services:
     
-    - TCP is a **connection-oriented** protocol: before you can send data, you need to establish a connection with the other side. Once the connection is established, it ensures that the data is delivered correctly and in order. This is a great guarantee to have but it also means that TCP connections take time to establish, resources to maintain, and bandwidth to use.
+    - TCP is a **connection-oriented** protocol: before you can send data, you need to establish a connection with the other side. Once the connection is established, it ensures that the data is delivered correctly and in order. This is a great guarantee to have but it also means that TCP connections take time to establish, resources to maintain, and bandwidth to use.
         
-    - UDP is a **connectionless** protocol: you can send data to any other IP address on the network without any prior setup. It does not ensure that the data is delivered correctly or in order. Spray and pray!
+    - UDP is a **connectionless** protocol: you can send data to any other IP address on the network without any prior setup. It does not ensure that the data is delivered correctly or in order. Spray and pray!
         
     
-- **Application Layer (Layer 7):** At the final layer are the application protocols like DNS, HTTP, Websockets, WebRTC. These are common protocols that build on top of TCP to provide a layer of abstraction for different types of data typically associated with web applications. We'll get into them in a bit!
+- **Application Layer (Layer 7):** At the final layer are the application protocols like DNS, HTTP, Websockets, WebRTC. These are common protocols that build on top of TCP to provide a layer of abstraction for different types of data typically associated with web applications. We'll get into them in a bit!
     
 
 These layers work together to enable all our network communications. To see how they interact in practice, let's walk through a concrete example of how a simple web request works.
@@ -75,9 +75,9 @@ When you type a URL into your browser, several layers of networking protocols sp
 
 While the specific details of TCP handshakes might seem technical, two key points are particularly relevant for system design interviews:
 
-1. First, each round trip between client and server adds **latency** to our request, including those to establish connections before we send our application data.
+1. First, each round trip between client and server adds **latency** to our request, including those to establish connections before we send our application data.
     
-2. Second, the TCP connection itself represents **state** that both the client and server must maintain. Unless we use features like HTTP keep-alive, we need to repeat this connection setup process for every request - a potentially significant overhead.
+2. Second, the TCP connection itself represents **state** that both the client and server must maintain. Unless we use features like HTTP keep-alive, we need to repeat this connection setup process for every request - a potentially significant overhead.
     
 
 Understanding when connections are established and how they are managed is crucial to touching on the important choices relevant for realtime updates.
@@ -591,13 +591,13 @@ Having some knowledge of the infra requirements (STUN/TURN, signaling servers, e
 
 There are a lot of options for delivering events from the server to the client. Being familiar with the trade-offs associated with each will give you the flexibility to make the best design decision for your system. If you're in a hurry, the following flowchart will help you choose the right tool for the job.
 
-- If you're not latency sensitive, **simple polling** is a great baseline. You should probably start here unless you have a specific need in your system.
+- If you're not latency sensitive, **simple polling** is a great baseline. You should probably start here unless you have a specific need in your system.
     
-- If you don't need bi-directional communication, **SSE** is a great choice. It's lightweight and works well for many use cases. There are some infrastructure considerations to keep in mind, but they're less invasive than with WebSocket and generally interviewers are less familiar with them or less critical if you don't address them.
+- If you don't need bi-directional communication, **SSE** is a great choice. It's lightweight and works well for many use cases. There are some infrastructure considerations to keep in mind, but they're less invasive than with WebSocket and generally interviewers are less familiar with them or less critical if you don't address them.
     
-- If you need frequent, bi-directional communication, **WebSocket** is the way to go. It's more complex, but the performance benefits are huge.
+- If you need frequent, bi-directional communication, **WebSocket** is the way to go. It's more complex, but the performance benefits are huge.
     
-- Finally, if you need to do audio/video calls, **WebRTC** is the only way to go. In some instances peer-to-peer collaboration can be enhanced with WebRTC, but you're unlikely to see it in a system design interview.
+- Finally, if you need to do audio/video calls, **WebRTC** is the only way to go. In some instances peer-to-peer collaboration can be enhanced with WebRTC, but you're unlikely to see it in a system design interview.
     
 
 ![Client Updates Flowchart](realtime-updates-7.png)
@@ -671,11 +671,11 @@ But this creates a problem! For our chat application, in order to send a message
 
 Ideally, when an a message needs to be sent, I would:
 
-1. Figure out which server `User C` is connected to.
+1. Figure out which server `User C` is connected to.
     
 2. Send the message to that server.
     
-3. That server will look up which (websocket, SSE, long-polling) request is associated with `User C`.
+3. That server will look up which (websocket, SSE, long-polling) request is associated with `User C`.
     
 4. The server will then write the message via the appropriate connection.
     
@@ -713,11 +713,11 @@ When we want to send messages to `User C`, we can simply hash the user's id to f
 
 ![Sending Updates to the Right Server](realtime-updates-12.png)
 
-1. Our Update Server stays connected to Zookeeper and knows the addresses of all servers and the modulo N.
+1. Our Update Server stays connected to Zookeeper and knows the addresses of all servers and the modulo N.
     
-2. When the Update Server needs to send a message to `User C`, it can hash the user's id to figure out which server is responsible for them (Server 2) and sends the message there.
+2. When the Update Server needs to send a message to `User C`, it can hash the user's id to figure out which server is responsible for them (Server 2) and sends the message there.
     
-3. Server 2 receives the message, looks up which connection is associated with `User C`, and sends the message to that connection.
+3. Server 2 receives the message, looks up which connection is associated with `User C`, and sends the message to that connection.
     
 
 This approach works because we always know that a single server is responsible for a given user (or entity, or ID, or whatever). All inbound connections go to that server and, if we want to use the connection associated with that entity, we know to pass it to that server for forwarding to the end client.

@@ -16,13 +16,13 @@ Let's start by understanding a bit about the basics.
 
 Cassandra has a set of basic data definitions that define how store and interact with data.
 
-- **Keyspace** - Keyspaces are basically data containers, and can be likened to "databases" in relational systems like Postgres or MySQL. They contain many tables. They are also responsible for owning configuration information about the tables. For example, keyspaces have a configured replication strategy (discussed later) for managing data redundancy / availability. The keyspace also owns any user-defined-types (UDTs) you might make to support your use-case.
+- **Keyspace** - Keyspaces are basically data containers, and can be likened to "databases" in relational systems like Postgres or MySQL. They contain many tables. They are also responsible for owning configuration information about the tables. For example, keyspaces have a configured replication strategy (discussed later) for managing data redundancy / availability. The keyspace also owns any user-defined-types (UDTs) you might make to support your use-case.
     
-- **Table** - A table is container for your data, in the form of rows. It has a name and contains configuration information about the data that is stored within it.
+- **Table** - A table is container for your data, in the form of rows. It has a name and contains configuration information about the data that is stored within it.
     
-- **Row** - A row is a container for data. It is represented by a primary key and contains columns.
+- **Row** - A row is a container for data. It is represented by a primary key and contains columns.
     
-- **Column** - A column contains data belonging to a row. A column is represented by a name, a type, and a value corresponding to the value of that column for a row. Not all columns need to be specified per row in a Cassandra table; Cassandra is a [**wide-column database**](https://www.scylladb.com/glossary/wide-column-database/) so the specified columns can vary per row in a table, making Cassandra more flexible than something like a relational database, which requires an entry for every column per row (even if that entry is NULL). Additionally, every column has timestamp metadata associated with it, denoting when it was written. When a column has a write conflict between replicas, it is resolved via "last write wins".
+- **Column** - A column contains data belonging to a row. A column is represented by a name, a type, and a value corresponding to the value of that column for a row. Not all columns need to be specified per row in a Cassandra table; Cassandra is a [**wide-column database**](https://www.scylladb.com/glossary/wide-column-database/) so the specified columns can vary per row in a table, making Cassandra more flexible than something like a relational database, which requires an entry for every column per row (even if that entry is NULL). Additionally, every column has timestamp metadata associated with it, denoting when it was written. When a column has a write conflict between replicas, it is resolved via "last write wins".
     
 
 ![](https://d248djf5mc6iku.cloudfront.net/excalidraw/7cbaeb89277750f28a5aeab41ca80871)
@@ -59,9 +59,9 @@ Of note, Cassandra columns support a plethora of [**types**](https://cassandra.a
 
 One of the most important constructs in Cassandra is the "primary key" of a table. Every row is represented uniquely by a primary key. A primary key consists of one or more partition keys and may include clustering keys. Let's break down what these terms mean.
 
-- **Partition Key** - One or more columns that are used to determine what partition the row is in. We'll discuss partitioning of data later in this deep-dive.
+- **Partition Key** - One or more columns that are used to determine what partition the row is in. We'll discuss partitioning of data later in this deep-dive.
     
-- **Clustering Key** - Zero or more columns that are used to determine the sorted order of rows in a table. Data ordering is important depending on one's data modeling needs, so Cassandra gives users control over this via the clustering keys.
+- **Clustering Key** - Zero or more columns that are used to determine the sorted order of rows in a table. Data ordering is important depending on one's data modeling needs, so Cassandra gives users control over this via the clustering keys.
     
 
 When you create a table in Cassandra via the Cassandra Query Language (CQL) dialect, you specify the primary key as part of defining the schema. Below are a few examples of different primary keys with comments inlined:
@@ -171,11 +171,11 @@ Before diving into the details, it's important to clarify how Cassandra handles 
 
 The 3 constructs core to the LSM tree index are:
 
-1. **Commit Log** - This basically is a [**write-ahead-log**](https://en.wikipedia.org/wiki/Write-ahead_logging) to ensure durability of writes for Cassandra nodes.
+1. **Commit Log** - This basically is a [**write-ahead-log**](https://en.wikipedia.org/wiki/Write-ahead_logging) to ensure durability of writes for Cassandra nodes.
     
-2. **Memtable** - An in-memory, sorted data structure that stores write data. It is sorted by primary key of each row.
+2. **Memtable** - An in-memory, sorted data structure that stores write data. It is sorted by primary key of each row.
     
-3. **SSTable** - A.k.a. "Sorted String Table." Immutable file on disk containing data that was flushed from a previous Memtable.
+3. **SSTable** - A.k.a. "Sorted String Table." Immutable file on disk containing data that was flushed from a previous Memtable.
     
 
 With all these constructs working together, writes look like this:
@@ -201,9 +201,9 @@ When reading data for a particular key, Cassandra reads the Memtable first, whic
 
 Building on the above foundation, there's 2 additional concepts to internalize:
 
-- **Compaction** - To prevent bloat of SSTables with many row updates / deletions, Cassandra will run compaction to consolidate data into a smaller set of SSTables, which reflect the consolidated state of data. Compaction also removes rows that were deleted, removing the tombstones that were previously present for that row. This process is particularly efficient because all of these tables are sorted.
+- **Compaction** - To prevent bloat of SSTables with many row updates / deletions, Cassandra will run compaction to consolidate data into a smaller set of SSTables, which reflect the consolidated state of data. Compaction also removes rows that were deleted, removing the tombstones that were previously present for that row. This process is particularly efficient because all of these tables are sorted.
     
-- **SSTable Indexing** - Cassandra stores files that point to byte offsets in SSTable files to enable faster retrieval of data on-disk. For example, Cassandra might map a key of 12 to a byte offset of 984, meaning the data for key 12 is found at that offset in the SSTable. This is somewhat similar to how a B-tree might point to data on disk.
+- **SSTable Indexing** - Cassandra stores files that point to byte offsets in SSTable files to enable faster retrieval of data on-disk. For example, Cassandra might map a key of 12 to a byte offset of 984, meaning the data for key 12 is found at that offset in the SSTable. This is somewhat similar to how a B-tree might point to data on disk.
     
 
 To read more about LSM trees, check out [**this article**](https://hackernoon.com/how-cassandra-stores-data-an-exploration-of-log-structured-merge-trees).
@@ -238,13 +238,13 @@ If you come from a relational database world, Cassandra data modeling might feel
 
 Cassandra's query efficiency is heavily tied to the way that data is stored. Cassandra also lacks the query flexibility of relational databases. It doesn't support JOINs and services single table queries. Therefore, when considering how to model the data of a Cassandra database, the "access patterns" of the application must be considered first and foremost. It also is important to understand what data is needed in each table, so that data can be "denormalized" (duplicated) across tables as necessary. The main areas to consider are:
 
-- **Partition Key** - What data determines the partition that the data is on.
+- **Partition Key** - What data determines the partition that the data is on.
     
-- **Partition Size** - How big a partition is in the most extreme case, whether partitions have the capacity to grow indefinitely, etc.
+- **Partition Size** - How big a partition is in the most extreme case, whether partitions have the capacity to grow indefinitely, etc.
     
-- **Clustering Key** - How the data should be sorted (if at all).
+- **Clustering Key** - How the data should be sorted (if at all).
     
-- **Data Denormalization** - Whether certain data needs to be denormalized across tables to support the app's queries.
+- **Data Denormalization** - Whether certain data needs to be denormalized across tables to support the app's queries.
     
 
 To drive home this point, it's helpful to go through some examples.
@@ -363,11 +363,11 @@ Generally, the above represents how an application's access patterns and UX have
 
 Beyond the fundamental use-cases of Cassandra, it's worthwhile to be aware of some of the advanced features at your disposal. Below is a shortlist of some of the major ones.
 
-- **Storage Attached Indexes (SAI)** - SAIs are a newer feature in Cassandra that offer global secondary indexes on columns. They offer flexible querying of data with performance that is worse than traditional querying based off partition key, but is still good. These enable Cassandra users to avoid excess denormalizing of data if there's query patterns that are less frequent. Lower frequency queries typically don't warrant the overhead of a separate, denormalized table for data. You can read more about them [**here**](https://cassandra.apache.org/doc/latest/cassandra/developing/cql/indexing/sai/sai-concepts.html).
+- **Storage Attached Indexes (SAI)** - SAIs are a newer feature in Cassandra that offer global secondary indexes on columns. They offer flexible querying of data with performance that is worse than traditional querying based off partition key, but is still good. These enable Cassandra users to avoid excess denormalizing of data if there's query patterns that are less frequent. Lower frequency queries typically don't warrant the overhead of a separate, denormalized table for data. You can read more about them [**here**](https://cassandra.apache.org/doc/latest/cassandra/developing/cql/indexing/sai/sai-concepts.html).
     
-- **Materialized Views** - Materialized views are a way for a user to configure Cassandra to materialize tables based off a source table. They are have some overlap with [**SQL views**](https://www.geeksforgeeks.org/sql-views/), except they actually "materialize" a table, hence their name. This is convenient because as a user, you can get Cassandra to denormalize data automatically for you. This cuts complexity at your application level, as you don't need to author your application to write to multiple tables if data that is denormalized changes. You can read more about materialized views [**here**](https://www.geeksforgeeks.org/sql-views/).
+- **Materialized Views** - Materialized views are a way for a user to configure Cassandra to materialize tables based off a source table. They are have some overlap with [**SQL views**](https://www.geeksforgeeks.org/sql-views/), except they actually "materialize" a table, hence their name. This is convenient because as a user, you can get Cassandra to denormalize data automatically for you. This cuts complexity at your application level, as you don't need to author your application to write to multiple tables if data that is denormalized changes. You can read more about materialized views [**here**](https://www.geeksforgeeks.org/sql-views/).
     
-- **Search Indexing** - Cassandra can be wired up to a distributed search engine such as ElasticSearch or Apache Solr via different plugins. One example is the Stratio Lucene Index. You can read more about it [**here**](https://cassandra.apache.org/doc/latest/cassandra/integrating/plugins/index.html#stratios-cassandra-lucene-index).
+- **Search Indexing** - Cassandra can be wired up to a distributed search engine such as ElasticSearch or Apache Solr via different plugins. One example is the Stratio Lucene Index. You can read more about it [**here**](https://cassandra.apache.org/doc/latest/cassandra/integrating/plugins/index.html#stratios-cassandra-lucene-index).
     
 
 ## Cassandra in an Interview

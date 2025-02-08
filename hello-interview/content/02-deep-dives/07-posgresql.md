@@ -662,27 +662,27 @@ That said, we aren't maxis over here. There are legitimate reasons to look beyon
 
 **1. Extreme Write Throughput** If you need to handle millions of writes per second, PostgreSQL will struggle because each write requires a WAL entry and index updates, creating I/O bottlenecks even with the fastest storage. Even with sharding, coordinating writes across many PostgreSQL nodes adds complexity and latency. In these cases, you might consider:
 
-- NoSQL databases (like [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra)) for event streaming
+- NoSQL databases (like [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra)) for event streaming
     
-- Key-value stores (like [Redis](https://www.hellointerview.com/learn/system-design/deep-dives/redis)) for real-time counters
+- Key-value stores (like [Redis](https://www.hellointerview.com/learn/system-design/deep-dives/redis)) for real-time counters
     
 
 **2. Global Multi-Region Requirements** When you need active-active deployment across regions (where multiple regions accept writes simultaneously), PostgreSQL faces fundamental limitations. Its single-primary architecture means one region must be designated as the primary writer, while others act as read replicas. Attempting true active-active deployment creates significant challenges around data consistency and conflict resolution, as PostgreSQL wasn't designed to handle simultaneous writes from multiple primaries. The synchronous replication needed across regions also introduces substantial latency, as changes must be confirmed by distant replicas before being committed. For these scenarios, consider:
 
 - CockroachDB for global ACID compliance
     
-- [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) for eventual consistency at global scale
+- [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) for eventual consistency at global scale
     
-- [DynamoDB](https://www.hellointerview.com/learn/system-design/deep-dives/dynamodb) for managed global tables
+- [DynamoDB](https://www.hellointerview.com/learn/system-design/deep-dives/dynamodb) for managed global tables
     
 
 **3. Simple Key-Value Access Patterns** If your access patterns are truly key-value (meaning you're just storing and retrieving values by key without joins or complex queries), PostgreSQL is overkill. Its MVCC architecture, WAL logging, and complex query planner add overhead you don't need. In these cases, consider:
 
-- [Redis](https://www.hellointerview.com/learn/system-design/deep-dives/redis) for in-memory performance
+- [Redis](https://www.hellointerview.com/learn/system-design/deep-dives/redis) for in-memory performance
     
-- [DynamoDB](https://www.hellointerview.com/learn/system-design/deep-dives/dynamodb) for managed scalability
+- [DynamoDB](https://www.hellointerview.com/learn/system-design/deep-dives/dynamodb) for managed scalability
     
-- [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) for write-heavy workloads
+- [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) for write-heavy workloads
     
 :::warning
 Scalability alone is not a good reason to choose an alternative to PostgreSQL. PostgreSQL can handle significant scale with proper design.
@@ -893,7 +893,7 @@ SQL commands fall into four main categories:
     
     - Creates and modifies database structure
         
-    - Examples: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`
+    - Examples: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`
 
 ```sql
 CREATE TABLE users (
@@ -910,7 +910,7 @@ ALTER TABLE users ADD COLUMN username TEXT;
     
     - Manages data within tables
         
-    - Examples: `SELECT`, `INSERT`, `UPDATE`, `DELETE`
+    - Examples: `SELECT`, `INSERT`, `UPDATE`, `DELETE`
         
     
 ```sql
@@ -927,7 +927,7 @@ WHERE id = 123;
     
     - Controls access permissions
         
-    - Examples: `GRANT`, `REVOKE`
+    - Examples: `GRANT`, `REVOKE`
         
     
 ```sql
@@ -939,7 +939,7 @@ GRANT SELECT ON users TO read_only_user;
     
     - Manages transactions
         
-    - Examples: `BEGIN`, `COMMIT`, `ROLLBACK`
+    - Examples: `BEGIN`, `COMMIT`, `ROLLBACK`
         
     
 ```sql

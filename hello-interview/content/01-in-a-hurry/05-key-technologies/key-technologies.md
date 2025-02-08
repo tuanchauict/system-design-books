@@ -37,11 +37,11 @@ Learning how RDBMS's work under the covers is beyond the scope of this guide, bu
 
 Beyond simply storing data, relational databases come equipped with several features which are useful for system design interviews. The most important of these are:
 
-1. **SQL Joins:** Joins are a way of combining data from multiple tables. For example, if you have a `users` table and a `posts` table, you might want to query for all posts by a particular user. This is important for querying data and SQL databases can support arbitrary joins between tables. Note that joins can be also be a major performance bottleneck in your system so minimize them where possible.
+1. **SQL Joins:** Joins are a way of combining data from multiple tables. For example, if you have a `users` table and a `posts` table, you might want to query for all posts by a particular user. This is important for querying data and SQL databases can support arbitrary joins between tables. Note that joins can be also be a major performance bottleneck in your system so minimize them where possible.
     
-2. **Indexes:** [Indexes](https://www.hellointerview.com/learn/system-design/in-a-hurry/key-technologies#indexing) are a way of storing data in a way that makes it faster to query. For example, if you have a `users` table with a `name` column, you might create an index on the `name` column. This would allow you to query for users by name much faster than if you didn't have an index. Indexes are often implemented using a [B-Tree](https://en.wikipedia.org/wiki/B-tree) or a [Hash Table](https://en.wikipedia.org/wiki/Hash_table). The great thing about relational databases is (a) their support for arbitrarily many indexes, which allows you to optimize for different queries and (b) their support for multi-column and specialized indexes (e.g. geospatial indexes, full-text indexes).
+2. **Indexes:** [Indexes](https://www.hellointerview.com/learn/system-design/in-a-hurry/key-technologies#indexing) are a way of storing data in a way that makes it faster to query. For example, if you have a `users` table with a `name` column, you might create an index on the `name` column. This would allow you to query for users by name much faster than if you didn't have an index. Indexes are often implemented using a [B-Tree](https://en.wikipedia.org/wiki/B-tree) or a [Hash Table](https://en.wikipedia.org/wiki/Hash_table). The great thing about relational databases is (a) their support for arbitrarily many indexes, which allows you to optimize for different queries and (b) their support for multi-column and specialized indexes (e.g. geospatial indexes, full-text indexes).
     
-3. **RDBMS Transactions:** Transactions are a way of grouping multiple operations together into a single atomic operation. For example, if you have a `users` table and a `posts` table, you might want to create a new user and a new post for that user at the same time. If you do this in a transaction, either both operations will succeed or both will fail. This ensures you don't have have invalid data like a post from a user who doesn't exist!
+3. **RDBMS Transactions:** Transactions are a way of grouping multiple operations together into a single atomic operation. For example, if you have a `users` table and a `posts` table, you might want to create a new user and a new post for that user at the same time. If you do this in a transaction, either both operations will succeed or both will fail. This ensures you don't have have invalid data like a post from a user who doesn't exist!
     
 
 ##### What are the most common relational databases?
@@ -66,13 +66,13 @@ The places where NoSQL databases excel are not necessarily places where relation
 
 ##### Things you should know about NoSQL databases
 
-1. **Data Models:** NoSQL databases come in many different flavors, each with its own data model. The most common types of NoSQL databases are key-value stores, document stores, column-family stores, and graph databases.
+1. **Data Models:** NoSQL databases come in many different flavors, each with its own data model. The most common types of NoSQL databases are key-value stores, document stores, column-family stores, and graph databases.
     
-2. **Consistency Models:** NoSQL databases offer various consistency models ranging from strong to eventual consistency. Strong consistency ensures that all nodes in the system have the same data at the same time, while eventual consistency ensures that all nodes will eventually have the same data.
+2. **Consistency Models:** NoSQL databases offer various consistency models ranging from strong to eventual consistency. Strong consistency ensures that all nodes in the system have the same data at the same time, while eventual consistency ensures that all nodes will eventually have the same data.
     
-3. **Indexing:** Just like with relational databases, NoSQL databases support indexing to make data faster to query. The most common types of indexes are B-Tree and Hash Table indexes.
+3. **Indexing:** Just like with relational databases, NoSQL databases support indexing to make data faster to query. The most common types of indexes are B-Tree and Hash Table indexes.
     
-4. **Scalability:** NoSQL databases scale horizontally by using [consistent hashing](http://highscalability.com/blog/2023/2/22/consistent-hashing-algorithm.html#:~:text=Consistent%20hashing%20is%20a%20distributed,of%20nodes%20changes%20%5B4%5D.) and/or [sharding](https://www.mongodb.com/features/database-sharding-explained#:~:text=Sharding%20is%20a%20method%20for,storage%20capacity%20of%20the%20system.) to distribute data across many servers.
+4. **Scalability:** NoSQL databases scale horizontally by using [consistent hashing](http://highscalability.com/blog/2023/2/22/consistent-hashing-algorithm.html#:~:text=Consistent%20hashing%20is%20a%20distributed,of%20nodes%20changes%20%5B4%5D.) and/or [sharding](https://www.mongodb.com/features/database-sharding-explained#:~:text=Sharding%20is%20a%20method%20for,storage%20capacity%20of%20the%20system.) to distribute data across many servers.
     
 
 ##### What are the most common NoSQL databases?
@@ -93,11 +93,11 @@ Avoid using blob storage like S3 as your primary database unless you have a very
 
 Here are some common examples of when to use blob storage:
 
-- [Design Youtube](https://www.hellointerview.com/learn/system-design/problem-breakdowns/youtube) -> Store videos in blob storage, store metadata in a database.
+- [Design Youtube](https://www.hellointerview.com/learn/system-design/problem-breakdowns/youtube) -> Store videos in blob storage, store metadata in a database.
     
 - Design Instagram -> Store images & videos in blob storage, store metadata in a database.
     
-- [Design Dropbox](https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox) -> Store files in blob storage, store metadata in a database.
+- [Design Dropbox](https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox) -> Store files in blob storage, store metadata in a database.
     
 
 A very common setup when dealing with large binary artifacts looks like this:
@@ -134,7 +134,7 @@ To download:
     
 5. **Upload and Download Directly from the Client**: Blob storage services allow you to upload and download blobs directly from the client. This is useful for applications that need to store and retrieve large blobs of data, like images or videos. Familiarize yourself with presigned URLs and how they can be used to grant temporary access to a blob -- either for upload or download.
     
-6. **Chunking**: When uploading large files, it's common to use chunking to upload the file in smaller pieces. This allows you to resume an upload if it fails partway through, and it also allows you to upload the file in parallel. This is especially useful for large files, where uploading the entire file at once might take a long time. Modern blob storage services like S3 support chunking out of the box via the [multipart upload API](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html).
+6. **Chunking**: When uploading large files, it's common to use chunking to upload the file in smaller pieces. This allows you to resume an upload if it fails partway through, and it also allows you to upload the file in parallel. This is especially useful for large files, where uploading the entire file at once might take a long time. Modern blob storage services like S3 support chunking out of the box via the [multipart upload API](https://docs.aws.amazon.com/AmazonS3/latest/userguide/mpuoverview.html).
     
 
 ##### Examples of blob storage services
@@ -239,7 +239,7 @@ Let's look at a couple common use cases for queues:
 
 1. **Buffer for Bursty Traffic**: In a ride-sharing application like Uber, queues can be used to manage sudden surges in ride requests. During peak hours or special events, ride requests can spike massively. A queue buffers these incoming requests, allowing the system to process them at a manageable rate without overloading the server or degrading the user experience.
     
-2. **Distribute Work Across a System:** In a cloud-based photo processing service, queues can be used to distribute expensive image processing tasks. When a user uploads photos for editing or filtering, these tasks are placed in a queue. Different worker nodes then pull tasks from the queue, ensuring even distribution of workload and efficient use of computing resources.
+2. **Distribute Work Across a System:** In a cloud-based photo processing service, queues can be used to distribute expensive image processing tasks. When a user uploads photos for editing or filtering, these tasks are placed in a queue. Different worker nodes then pull tasks from the queue, ensuring even distribution of workload and efficient use of computing resources.
     
 
 
@@ -247,7 +247,7 @@ Let's look at a couple common use cases for queues:
 
 ##### Things you should know about queues for your interview
 
-1. **Message Ordering**: Most queues are FIFO (first in, first out), meaning that messages are processed in the order they were received. However, some queues (like [Kafka](https://www.hellointerview.com/learn/system-design/deep-dives/kafka)) allow for more complex ordering guarantees, such as ordering based on a specified priority or time.
+1. **Message Ordering**: Most queues are FIFO (first in, first out), meaning that messages are processed in the order they were received. However, some queues (like [Kafka](https://www.hellointerview.com/learn/system-design/deep-dives/kafka)) allow for more complex ordering guarantees, such as ordering based on a specified priority or time.
     
 2. **Retry Mechanisms**: Many queues have built-in retry mechanisms that attempt to redeliver a message a certain number of times before considering it a failure. You can configure retries, including the delay between attempts, and the maximum number of attempts.
     
@@ -274,11 +274,11 @@ Event sourcing is a technique where changes in application state are stored as a
 
 In either case, you'll likely want to use a stream. Unlike message queues, streams can retain data for a configurable period of time, allowing consumers to read and re-read messages from the same position or from a specified time in the past. Streams are a good choice...
 
-1. **When you need to process large amounts of data in real-time.** Imagine designing a system for a social media platform where you need to display real-time analytics of user engagements (likes, comments, shares) on posts. You can use a stream to ingest high volumes of engagement events generated by users across the globe. A stream processing system (like Apache Flink or Spark Streaming) can process these events in real-time to update the analytics dashboard.
+1. **When you need to process large amounts of data in real-time.** Imagine designing a system for a social media platform where you need to display real-time analytics of user engagements (likes, comments, shares) on posts. You can use a stream to ingest high volumes of engagement events generated by users across the globe. A stream processing system (like Apache Flink or Spark Streaming) can process these events in real-time to update the analytics dashboard.
     
-2. **When you need to support complex processing scenarios like event sourcing.** Consider a banking system where every transaction (deposits, withdrawals, transfers) needs to be recorded and could affect multiple accounts. Using event sourcing with a stream like Kafka, each transaction is an event that can be stored, processed, and replayed. This setup not only allows for real-time processing of transactions but also enables the bank to audit transactions, rollback changes, or reconstruct the state of any account at any point in time by replaying the events.
+2. **When you need to support complex processing scenarios like event sourcing.** Consider a banking system where every transaction (deposits, withdrawals, transfers) needs to be recorded and could affect multiple accounts. Using event sourcing with a stream like Kafka, each transaction is an event that can be stored, processed, and replayed. This setup not only allows for real-time processing of transactions but also enables the bank to audit transactions, rollback changes, or reconstruct the state of any account at any point in time by replaying the events.
     
-3. **When you need to support multiple consumers reading from the same stream.** In a real-time chat application, when a user sends a message, it's published to a stream associated with the chat room. This stream acts as a centralized channel where all chat participants are subscribers. As the message is distributed through the stream, each participant (consumer) receives the message simultaneously, allowing for real-time communication. **This is a great example of a publish-subscribe pattern, which is a common use case for streams.**
+3. **When you need to support multiple consumers reading from the same stream.** In a real-time chat application, when a user sends a message, it's published to a stream associated with the chat room. This stream acts as a centralized channel where all chat participants are subscribers. As the message is distributed through the stream, each participant (consumer) receives the message simultaneously, allowing for real-time communication. **This is a great example of a publish-subscribe pattern, which is a common use case for streams.**
     
 
 ##### Things you should know about streams for your interview
@@ -308,13 +308,13 @@ Another handy feature of distributed locks is that they can be set to expire aft
 
 Here are some common examples of when to use a distributed lock in a system design interview:
 
-1. **E-Commerce Checkout System:** Use a distributed lock to hold a high-demand item, like limited-edition sneakers, in a user's cart for a short duration (like 10 minutes) during checkout to ensure that while one user is completing the payment process, the item isn't sold to someone else.
+1. **E-Commerce Checkout System:** Use a distributed lock to hold a high-demand item, like limited-edition sneakers, in a user's cart for a short duration (like 10 minutes) during checkout to ensure that while one user is completing the payment process, the item isn't sold to someone else.
     
-2. **Ride-Sharing Matchmaking:** A distributed lock can be used to manage the assignment of drivers to riders. When a rider requests a ride, the system can lock a nearby driver, preventing them from being matched with multiple riders simultaneously. This lock can be held until the driver confirms or declines the ride or until a certain amount of time has passed.
+2. **Ride-Sharing Matchmaking:** A distributed lock can be used to manage the assignment of drivers to riders. When a rider requests a ride, the system can lock a nearby driver, preventing them from being matched with multiple riders simultaneously. This lock can be held until the driver confirms or declines the ride or until a certain amount of time has passed.
     
-3. **Distributed Cron Jobs:** For systems that [run scheduled tasks (cron jobs) across multiple servers](https://www.hellointerview.com/learn/system-design/problem-breakdowns/job-scheduler), a distributed lock ensures that a task is executed by only one server at a time. For instance, in a data analytics platform, a daily job aggregates user data for reports. A distributed lock can prevent the duplication of this task across multiple servers to save compute resources.
+3. **Distributed Cron Jobs:** For systems that [run scheduled tasks (cron jobs) across multiple servers](https://www.hellointerview.com/learn/system-design/problem-breakdowns/job-scheduler), a distributed lock ensures that a task is executed by only one server at a time. For instance, in a data analytics platform, a daily job aggregates user data for reports. A distributed lock can prevent the duplication of this task across multiple servers to save compute resources.
     
-4. **Online Auction Bidding System:** In an [online auction](https://www.hellointerview.com/learn/system-design/problem-breakdowns/online-auction), a distributed lock can be used during the final moments of bidding to ensure that when a bid is placed in the last seconds, the system locks the item briefly to process the bid and update the current highest bid, preventing other users from placing a bid on the same item simultaneously.
+4. **Online Auction Bidding System:** In an [online auction](https://www.hellointerview.com/learn/system-design/problem-breakdowns/online-auction), a distributed lock can be used during the final moments of bidding to ensure that when a bid is placed in the last seconds, the system locks the item briefly to process the bid and update the current highest bid, preventing other users from placing a bid on the same item simultaneously.
     
 
 ##### Things you should know about distributed locks for your interview

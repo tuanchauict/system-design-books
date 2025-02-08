@@ -166,7 +166,7 @@ When a user submits a long url, the client sends a POST request to /urls with th
 
 1. The Primary Server receives the request and validates the long URL. This is to ensure that the URL is valid (there's no point in shortening an invalid URL) and that it doesn't already exist in our system (we don't want collisions).
     
-    - To validate that the URL is valid, we can use popular open-source libraries like [is-url](https://www.npmjs.com/package/is-url) or write our own simple validation.
+    - To validate that the URL is valid, we can use popular open-source libraries like [is-url](https://www.npmjs.com/package/is-url) or write our own simple validation.
         
     - To check if the URL already exists in our system, we can query our database to see if the long URL is already present.
         
@@ -191,7 +191,7 @@ Now our short URL is live and users can access the original URL by using the sho
 
 When a user accesses a shortened URL, the following process occurs:
 
-1. The user's browser sends a GET request to our server with the short code (e.g., `GET /abc123`).
+1. The user's browser sends a GET request to our server with the short code (e.g., `GET /abc123`).
     
 2. Our Primary Server receives this request and looks up the short code (`abc123`) in the database.
     

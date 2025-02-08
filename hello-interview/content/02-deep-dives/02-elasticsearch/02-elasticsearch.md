@@ -6,8 +6,8 @@ Many system design problems will involve some aspect of search and retrieval: I'
 
 From an interview perspective, this deep dive will tackle two different angles to understanding Elasticsearch:
 
-1. First, you'll learn how to _use_ Elasticsearch. This will give you a powerful tool for your arsenal. Rarely are you going to find a search and retrieval question which is too complex for Elasticsearch. If you're interviewing for a startup or interviewing at a product architecture-style interview, knowing Elasticsearch will help. You can skip this section if you've used it before!
-2. Secondly, you'll learn how Elasticsearch _works_ under the hood. As an incredible piece of distributed systems engineering, Elasticsearch brings together a lot of different concepts which can be used even outside search and retrieval problems. And some gnarly interviewers (I'm not the only one, I promise!) might ask you to pretend Elasticsearch doesn't exist and explain some of the top-level concepts yourself. This is more common for infra- heavy roles, particularly at cloud companies.
+1. First, you'll learn how to _use_ Elasticsearch. This will give you a powerful tool for your arsenal. Rarely are you going to find a search and retrieval question which is too complex for Elasticsearch. If you're interviewing for a startup or interviewing at a product architecture-style interview, knowing Elasticsearch will help. You can skip this section if you've used it before!
+2. Secondly, you'll learn how Elasticsearch _works_ under the hood. As an incredible piece of distributed systems engineering, Elasticsearch brings together a lot of different concepts which can be used even outside search and retrieval problems. And some gnarly interviewers (I'm not the only one, I promise!) might ask you to pretend Elasticsearch doesn't exist and explain some of the top-level concepts yourself. This is more common for infra- heavy roles, particularly at cloud companies.
 
 Elasticsearch is an enormous project built over more than a decade so there's a ton of features and functionality that we won't cover here, but we'll try to cover important bits in as we dig all the way in to this project. Off we go.
 
@@ -493,18 +493,18 @@ Example:
 
 The `search_after` parameter uses the sort values from the last result of the previous page. Here's how it works:
 
-1. In your initial query, you don't include the `search_after` parameter.
+1. In your initial query, you don't include the `search_after` parameter.
     
 2. From the results of your initial query, you take the sort values of the last document.
     
-3. These sort values become the search_after parameter for your next query.
+3. These sort values become the search_after parameter for your next query.
     
 
 In the example above:
 
-- `1463538857` is a timestamp (the `date` field's value for the last document in the previous page).
+- `1463538857` is a timestamp (the `date` field's value for the last document in the previous page).
     
-- `"654323"` is the `_id` of the last document in the previous page.
+- `"654323"` is the `_id` of the last document in the previous page.
     
 
 By providing these values, Elasticsearch knows exactly where to start for the next page, making it very efficient even for deep pagination. This approach ensures that:
@@ -554,7 +554,7 @@ This returns a PIT ID.
 }
 ```
 
-1. **For subsequent pages, add search_after**:
+1. **For subsequent pages, add search_after**:
     
 ```json
 // GET /_search
@@ -603,15 +603,15 @@ There's enough here to talk for hours so let's start with the high-level archite
 
 Elasticsearch is a _distributed_ search engine. When you spin up an Elasticsearch cluster, you're actually spinning up multiple nodes. Nodes can be of 5 types which are specified when the instance is started.
 
-- **Master Node** is responsible for coordinating the cluster. It's the only node that can perform cluster-level operations like adding or removing nodes, and creating or deleting indices. Think of it like the "admin".
+- **Master Node** is responsible for coordinating the cluster. It's the only node that can perform cluster-level operations like adding or removing nodes, and creating or deleting indices. Think of it like the "admin".
     
-- **Data Node** is responsible for storing the data. It's where your data is actually stored. You'll have lots of these in a big cluster.
+- **Data Node** is responsible for storing the data. It's where your data is actually stored. You'll have lots of these in a big cluster.
     
-- **Coordinating Node** is responsible for coordinating the search requests across the cluster. It's the node that receives the search request from the client and sends it to the appropriate nodes. This is the frontend for your cluster.
+- **Coordinating Node** is responsible for coordinating the search requests across the cluster. It's the node that receives the search request from the client and sends it to the appropriate nodes. This is the frontend for your cluster.
     
-- **Ingest Node** is responsible for data ingestion. It's where your data is transformed and prepared for indexing.
+- **Ingest Node** is responsible for data ingestion. It's where your data is transformed and prepared for indexing.
     
-- **Machine Learning Node** is responsible for machine learning tasks.
+- **Machine Learning Node** is responsible for machine learning tasks.
     
 
 These nodes work together in pretty straightforward ways. Here's a sequence diagram of Ingest nodes loading data into Data nodes which are then queried via Coordinating Nodes:
@@ -765,9 +765,9 @@ Some things to keep in mind when using Elasticsearch in your interview:
     
 2. Elasticsearch is designed for read-heavy workloads. If you're dealing with a write-heavy system, you might want to consider other options or implement a write buffer. While it might be convenient that you can add field for e.g. the number of likes on a post or impression counts, there's a lot of reasons this will cause ElasticSearch to struggle.
     
-3. Ensure you account for the eventual consistency model of Elasticsearch. Your results _will_ be stale, sometimes significantly. If your use-case can't tolerate this, you may need to consider alternatives.
+3. Ensure you account for the eventual consistency model of Elasticsearch. Your results _will_ be stale, sometimes significantly. If your use-case can't tolerate this, you may need to consider alternatives.
     
-4. Elasticsearch is _not_ a relational database. You'll want to denormalize your data as much as possible to make search queries efficient. This may require some additional transformation logic on the write side to make it happen. You should aim for your results to be provided by 1 or 2 queries.
+4. Elasticsearch is _not_ a relational database. You'll want to denormalize your data as much as possible to make search queries efficient. This may require some additional transformation logic on the write side to make it happen. You should aim for your results to be provided by 1 or 2 queries.
     
 5. Not all search problems require it! If your data is small (< 100k documents) or doesn't change often, there are many other and faster solutions. See if a simple query against your primary data store is sufficient and only consider Elasticsearch if you find that to be insufficient.
     

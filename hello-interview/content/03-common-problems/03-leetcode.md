@@ -317,7 +317,7 @@ Once we have the leaderboard, we'll pass it back to the client to display. In or
 
 Tying it all together:
 
-1. User requests the leaderboard via `/leaderboard/:competitionId`
+1. User requests the leaderboard via `/leaderboard/:competitionId`
     
 2. The API server initiates a query to the submission table in our database to get all successful submissions for the competition.
     
@@ -349,9 +349,9 @@ By running our code in an isolated container, we've already taken a big step tow
     
 3. **Explicit Timeout**: To prevent users from running infinite loops, we can wrap the user's code in a timeout that kills the process if it runs for longer than a predefined time limit, say 5 seconds. This will also help us meet our requirement of returning submission results within 5 seconds.
     
-4. **Limit Network Access**: To prevent users from making network requests, we can disable network access in the container, ensuring that users can't make any external calls. If working within the AWS ecosystem, we can use [Virtual Private Cloud (VPC)](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) Security Groups and NACLs to restrict all outbound and inbound traffic except for predefined, essential connections.
+4. **Limit Network Access**: To prevent users from making network requests, we can disable network access in the container, ensuring that users can't make any external calls. If working within the AWS ecosystem, we can use [Virtual Private Cloud (VPC)](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) Security Groups and NACLs to restrict all outbound and inbound traffic except for predefined, essential connections.
     
-5. **No System Calls (Seccomp)**: We don't want users to be able to make system calls that could compromise the host system. We can use [seccomp](https://docs.docker.com/engine/security/seccomp/) to restrict the system calls that the container can make.
+5. **No System Calls (Seccomp)**: We don't want users to be able to make system calls that could compromise the host system. We can use [seccomp](https://docs.docker.com/engine/security/seccomp/) to restrict the system calls that the container can make.
     
 :::info
 Note that in an interview you're likely not expected to go into a ton of detail on how you'd implement each of these security measures. Instead, focus on the high-level concepts and how they would help to secure the system. If your interviewer is interested in a particular area, they'll ask you to dive deeper. To be concrete, this means just saying, "We'd use docker containers while limiting network access, setting CPU and memory bounds, and enforcing a timeout on the code execution" is likely sufficient.

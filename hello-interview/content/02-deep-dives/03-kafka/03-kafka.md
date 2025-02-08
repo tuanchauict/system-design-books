@@ -196,16 +196,16 @@ Consider adding a message queue to your system when:
 
 - You have processing that can be done asynchronously. YouTube is a good example of this. When users upload a video we can make the standard definition video available immediately and then put the video (via link) a Kafka topic to be transcoded when the system has time.
     
-- You need to ensure that messages are processed in order. We could use Kafka for our virtual waiting queue in [**Design Ticketmaster**](https://www.hellointerview.com/learn/system-design/problem-breakdowns/ticketmaster) which is meant to ensure that users are let into the booking page in the order they arrived.
+- You need to ensure that messages are processed in order. We could use Kafka for our virtual waiting queue in [**Design Ticketmaster**](https://www.hellointerview.com/learn/system-design/problem-breakdowns/ticketmaster) which is meant to ensure that users are let into the booking page in the order they arrived.
     
 - You want to decouple the producer and consumer so that they can scale independently. Usually this means that the producer is producing messages faster than the consumer can consume them. This is a common pattern in microservices where you want to ensure that one service can't take down another.
     
 
 Streams are useful when:
 
-- You require continuous and immediate processing of incoming data, treating it as a real-time flow. See [**Design an Ad Click Aggregator**](https://www.hellointerview.com/learn/system-design/problem-breakdowns/ad-click-aggregator) for an example where we aggregate click data in real-time.
+- You require continuous and immediate processing of incoming data, treating it as a real-time flow. See [**Design an Ad Click Aggregator**](https://www.hellointerview.com/learn/system-design/problem-breakdowns/ad-click-aggregator) for an example where we aggregate click data in real-time.
     
-- Messages need to be processed by multiple consumers simultaneously. In [**Design FB Live Comments**](https://www.hellointerview.com/learn/system-design/problem-breakdowns/fb-live-comments) we can use Kafka as a pub/sub system to send comments to multiple consumers.
+- Messages need to be processed by multiple consumers simultaneously. In [**Design FB Live Comments**](https://www.hellointerview.com/learn/system-design/problem-breakdowns/fb-live-comments) we can use Kafka as a pub/sub system to send comments to multiple consumers.
 
 ## What you should know about Kafka for System Design Interviews
 

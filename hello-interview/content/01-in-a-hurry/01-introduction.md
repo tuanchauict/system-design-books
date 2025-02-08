@@ -26,7 +26,7 @@ For more experienced candidates, this may be just organizing things you already 
 For your preparation, we recommend that you read this guide in order, skipping any sections you already know. While we link off to additional material where relevant, we've tried to make this guide as self-contained as possible. Don't worry if you don't have time to read the additional material.
 
 :::tip
-Throughout the guide we've layered in commentary in these Tips and Warnings for common mistakes or things people tend to overlook in the interview. _Pay attention to these_ as they're the most likely things to end up as yellow flags in your interview.
+Throughout the guide we've layered in commentary in these Tips and Warnings for common mistakes or things people tend to overlook in the interview. _Pay attention to these_ as they're the most likely things to end up as yellow flags in your interview.
 :::
 
 If you're _really_ short on time, we recommend covering the [**Delivery Framework**](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery) section, skimming the [Key Technologies](https://www.hellointerview.com/learn/system-design/in-a-hurry/key-technologies), and spending any remaining time studying the [**Core Concepts**](https://www.hellointerview.com/learn/system-design/in-a-hurry/core-concepts) section.

@@ -18,11 +18,11 @@ LEVEL: MEDIUM | [Watch on YouTube](https://www.youtube.com/watch?v=fhdPyoO6aXI)
     
 3. When evaluating non-functional requirements, it's crucial to uncover the distinct characteristics that make this system challenging or unique. To help you identify these, consider the following questions:
     
-    1. **CAP theorem:** Does this system prioritize availability or consistency? Note, that in some cases, the answer is different depending on the part of the system -- as you'll see is the case here.
+    1. **CAP theorem:** Does this system prioritize availability or consistency? Note, that in some cases, the answer is different depending on the part of the system -- as you'll see is the case here.
         
-    2. **Read vs write ratio:** is this a read heavy system or write heavy? Are either notably heavy for any reason?
+    2. **Read vs write ratio:** is this a read heavy system or write heavy? Are either notably heavy for any reason?
         
-    3. **Query access pattern:** Is the access pattern of the system regular or are their patterns or bursts that require particular attention. For example, the holidays for shopping sites or popular events for ticket booking.
+    3. **Query access pattern:** Is the access pattern of the system regular or are their patterns or bursts that require particular attention. For example, the holidays for shopping sites or popular events for ticket booking.
         
     
 
@@ -159,18 +159,18 @@ We start by laying out the core components for communicating between the client 
 
 ![View Event Flow](ticketmaster-2.png)
 
-1. **Clients:** Users will interact with the system through the clients website or app. All client requests will be routed to the system's backend through an API Gateway.
+1. **Clients:** Users will interact with the system through the clients website or app. All client requests will be routed to the system's backend through an API Gateway.
     
-2. **API Gateway:** This serves as an entry point for clients to access the different microservices of the system. It's primarily responsible for routing requests to the appropriate services but can also be configured to handle cross-cutting concerns like authentication, rate limiting, and logging.
+2. **API Gateway:** This serves as an entry point for clients to access the different microservices of the system. It's primarily responsible for routing requests to the appropriate services but can also be configured to handle cross-cutting concerns like authentication, rate limiting, and logging.
     
-3. **Event Service:** Our first microservice is responsible for handling view API requests by fetching the necessary event, venue, and performer information from the database and returning the results to the client.
+3. **Event Service:** Our first microservice is responsible for handling view API requests by fetching the necessary event, venue, and performer information from the database and returning the results to the client.
     
-4. **Events DB:** Stores tables for events, performers, and venues.
+4. **Events DB:** Stores tables for events, performers, and venues.
     
 
 Let's walk through exactly what happens when a user makes a request to `www.yourticketmaster.com/event/:eventId` to view an event.
 
-1. The client makes a REST GET request with the `eventId`
+1. The client makes a REST GET request with the `eventId`
     
 2. The API gateway then forwards the request onto our Event Service.
     
@@ -208,23 +208,23 @@ When selecting a database, the actual technology chosen is less important than t
 
 ![Simple Booking Flow](ticketmaster-4.png)
 
-1. **New Tables in Events DB**: First we add two new tables to our database, `Bookings` and `Tickets`. The `Bookings` table will store the details of each booking, including the user ID, ticket IDs, total price, and booking status. The `Tickets` table will store the details of each ticket, including the event ID, seat details, pricing, and status. The `Tickets` table will also have a `bookingId` column that links it to the `Bookings` table.
+1. **New Tables in Events DB**: First we add two new tables to our database, `Bookings` and `Tickets`. The `Bookings` table will store the details of each booking, including the user ID, ticket IDs, total price, and booking status. The `Tickets` table will store the details of each ticket, including the event ID, seat details, pricing, and status. The `Tickets` table will also have a `bookingId` column that links it to the `Bookings` table.
     
-2. **Booking Service:** This microservice is responsible for the core functionality of the ticket booking process. It interacts with databases that store data on bookings and tickets.
+2. **Booking Service:** This microservice is responsible for the core functionality of the ticket booking process. It interacts with databases that store data on bookings and tickets.
     
-    - It interfaces with the `Payment Processor (Stripe)` for transactions. Once a payment is confirmed, the booking service updates the ticket status to "sold".
+    - It interfaces with the `Payment Processor (Stripe)` for transactions. Once a payment is confirmed, the booking service updates the ticket status to "sold".
         
-    - It communicates with the `Bookings` and `Tickets` tables to fetch, update, or store relevant data.
+    - It communicates with the `Bookings` and `Tickets` tables to fetch, update, or store relevant data.
         
     
-3. **Payment Processor (Stripe):** An external service responsible for handling payment transactions. Once a payment is processed, it notifies the booking service of the transaction status.
+3. **Payment Processor (Stripe):** An external service responsible for handling payment transactions. Once a payment is processed, it notifies the booking service of the transaction status.
     
 
 When a user goes to book a ticket, the following happens:
 
 1. The user is redirected to a booking page where they can provide their payment details and confirm the booking.
     
-2. Upon confirmation, a POST request is sent to the `/bookings` endpoint with the selected ticket IDs.
+2. Upon confirmation, a POST request is sent to the `/bookings` endpoint with the selected ticket IDs.
     
 3. The booking server initiates a transaction to:
     
@@ -358,7 +358,7 @@ In this case, let's go with the great solution and use distributed lock. We can 
 
 Now, when a user wants to book a ticket:
 
-1. A user will select a seat from the interactive seat map. This will trigger a POST `/bookings` with the ticketId associated with that seat.
+1. A user will select a seat from the interactive seat map. This will trigger a POST `/bookings` with the ticketId associated with that seat.
     
 2. The request will be forwarded from our API gateway onto the Booking Service.
     
@@ -366,14 +366,14 @@ Now, when a user wants to book a ticket:
     
 4. The Booking Service will also write a new booking entry in the DB with a status of in-progress.
     
-5. We will then respond to the user with their newly created `bookingId` and route the client to a the payment page.
+5. We will then respond to the user with their newly created `bookingId` and route the client to a the payment page.
     
     1. If the user stops here, then after 10 minutes the lock is auto-released and the ticket is available for another user to purchase.
         
     
-6. The user will fill out their payment details and click “Purchase.” In doing so, the payment (along with the `bookingId`) gets sent to Stripe for processing and Stripe responds via webhook that the payment was successful.
+6. The user will fill out their payment details and click “Purchase.” In doing so, the payment (along with the `bookingId`) gets sent to Stripe for processing and Stripe responds via webhook that the payment was successful.
     
-7. Upon successful payment confirmation from Stripe, our system's webhook retrieves the `bookingId` embedded within the Stripe metadata. With this `bookingId`, the webhook initiates a database transaction to concurrently update the Ticket and Booking tables. Specifically, the status of the ticket linked to the booking is changed to "sold" in the Ticket table. Simultaneously, the corresponding booking entry in the Booking table is marked as "confirmed."
+7. Upon successful payment confirmation from Stripe, our system's webhook retrieves the `bookingId` embedded within the Stripe metadata. With this `bookingId`, the webhook initiates a database transaction to concurrently update the Ticket and Booking tables. Specifically, the status of the ticket linked to the booking is changed to "sold" in the Ticket table. Simultaneously, the corresponding booking entry in the Booking table is marked as "confirmed."
     
 8. Now the ticket is booked!
     
@@ -391,7 +391,7 @@ Caching
 
 - Prioritize caching for data with high read rates and low update frequency, such as event details (names, dates, venue information), performer bios, and static venue details like location and capacity. Because this data does not change frequently, we can cache it like crazy to heavily minimize the load of our SQL DB and meet our high availability requirements.
     
-- [Cache](https://www.hellointerview.com/learn/system-design/in-a-hurry/key-technologies#distributed-cache) key-value pairs like `eventId:eventObject` to efficiently serve frequently accessed data.
+- [Cache](https://www.hellointerview.com/learn/system-design/in-a-hurry/key-technologies#distributed-cache) key-value pairs like `eventId:eventObject` to efficiently serve frequently accessed data.
     
 - Utilize Redis or Memcached as in-memory data stores, leveraging their speed for handling large volumes of read operations. A read-through cache strategy ensures data availability, with cache misses triggering a database read and subsequent cache update.
     
@@ -485,7 +485,7 @@ Let's look at some strategies to improve search performance and ensure we meet o
 
 - Create indexes on the Event, Performer, and Venues tables to improve query performance. Indexes allow for faster data retrieval by mapping the values in specific columns to their corresponding rows in the table. This speeds up search queries by reducing the number of rows that need to be scanned. We want to index the columns that are frequently used in search queries, such as event name, event date, performer name, and venue location.
     
-- Optimize queries to improve performance. This includes techniques like using `EXPLAIN` to analyze query execution plans, avoiding `SELECT *` queries, and using `LIMIT` to restrict the number of rows returned. Additionally, using `UNION` instead of OR for combining multiple queries can improve performance.
+- Optimize queries to improve performance. This includes techniques like using `EXPLAIN` to analyze query execution plans, avoiding `SELECT *` queries, and using `LIMIT` to restrict the number of rows returned. Additionally, using `UNION` instead of OR for combining multiple queries can improve performance.
     
 
 **Challenges**

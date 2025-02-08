@@ -87,9 +87,9 @@ My suggestion when introducing a API Gateway to your design is to simply mention
 
 The gateway maintains a routing table that maps incoming requests to backend services. This mapping is typically based on a combination of:
 
-- URL paths (e.g., /users/* routes to the user service)
+- URL paths (e.g., /users/* routes to the user service)
     
-- HTTP methods (e.g., GET, POST, etc.)
+- HTTP methods (e.g., GET, POST, etc.)
     
 - Query parameters
     

@@ -19,11 +19,11 @@ LEVEL: MEDIUM |  [Watch on YouTube](https://www.youtube.com/watch?v=lsKU38RKQSo)
     
 3. When evaluating non-functional requirements, it's crucial to uncover the distinct characteristics that make this system challenging or unique. To help you identify these, consider the following questions:
     
-    1. **CAP theorem:** Does this system prioritize availability or consistency? Note, that in some cases, the answer is different depending on the part of the system -- as you'll see is the case here.
+    1. **CAP theorem:** Does this system prioritize availability or consistency? Note, that in some cases, the answer is different depending on the part of the system -- as you'll see is the case here.
         
-    2. **Read vs write ratio:** is this a read heavy system or write heavy? Are either notably heavy for any reason?
+    2. **Read vs write ratio:** is this a read heavy system or write heavy? Are either notably heavy for any reason?
         
-    3. **Query access pattern:** Is the access pattern of the system regular or are their patterns or bursts that require particular attention. For example, the holidays for shopping sites or popular events for ticket booking.
+    3. **Query access pattern:** Is the access pattern of the system regular or are their patterns or bursts that require particular attention. For example, the holidays for shopping sites or popular events for ticket booking.
         
 :::
 
@@ -185,12 +185,12 @@ The core components necessary to fulfill fare estimation are:
     
 4. **Third Party Mapping API**: We use a third-party service (like Google Maps) to provide mapping and routing functionality. It is used by the Ride Service to calculate the distance and travel time between locations.
     
-5. **Database:** The database is, so far, responsible for storing Fare entities. In this case, it creates a fare with information about the price, eta, etc.
+5. **Database:** The database is, so far, responsible for storing Fare entities. In this case, it creates a fare with information about the price, eta, etc.
     
 
 Let's walk through exactly how these component interact when a rider requests a fare estimate.
 
-1. The rider enters their pickup location and desired destination into the client app, which sends a POST request to our backend system via `/fare`
+1. The rider enters their pickup location and desired destination into the client app, which sends a POST request to our backend system via `/fare`
     
 2. The API gateway receives the request and handles any necessary authentication and rate limiting before forwarding the request to the Ride Service.
     
@@ -263,7 +263,7 @@ Let's walk through the sequence of events that occur when a driver accepts a rid
 
 1. After the Ride Matching Service determines the ranked list of eligible drivers, it sends a notification to the top driver on the list via APN or FCM.
     
-2. The driver receives a notification that a new ride request is available. They open the Driver Client app and accept the ride request, which sends a PATCH request to our backend system with the rideID. a) If they decline the ride instead, the system will send a notification to the next driver on the list.
+2. The driver receives a notification that a new ride request is available. They open the Driver Client app and accept the ride request, which sends a PATCH request to our backend system with the rideID. a) If they decline the ride instead, the system will send a notification to the next driver on the list.
     
 3. The API gateway receives the requests and routes it to the Ride Service.
     
@@ -386,11 +386,11 @@ The key intuition is that we need to lock drivers to prevent multiple ride reque
 
 This approach has several issues, here are the main ones:
 
-- **Lack of Coordination:** With multiple instances of the Ride Matching Service running, there's no centralized coordination, leading to potential race conditions where two instances might attempt to lock the same ride request simultaneously.
+- **Lack of Coordination:** With multiple instances of the Ride Matching Service running, there's no centralized coordination, leading to potential race conditions where two instances might attempt to lock the same ride request simultaneously.
     
-- **Inconsistent Lock State:** If one instance sets a lock but fails before releasing it (due to a crash or network issue), other instances have no knowledge of this lock, which can leave the ride request in a locked state indefinitely.
+- **Inconsistent Lock State:** If one instance sets a lock but fails before releasing it (due to a crash or network issue), other instances have no knowledge of this lock, which can leave the ride request in a locked state indefinitely.
     
-- **Scalability Concerns:** As the system scales and the number of instances increases, the problem of coordinating locks across instances becomes more pronounced, leading to a higher likelihood of errors and inconsistencies.
+- **Scalability Concerns:** As the system scales and the number of instances increases, the problem of coordinating locks across instances becomes more pronounced, leading to a higher likelihood of errors and inconsistencies.
 :::
     
 
