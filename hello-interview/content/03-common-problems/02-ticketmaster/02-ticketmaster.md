@@ -419,6 +419,7 @@ Horizontal Scaling
     
 - Managing a large number of instances presents complexities. Ensuring smooth deployment and effective rollback procedures adds to the operational challenges.
     
+:::
 
 ![Caching](ticketmaster-6.png)
 
@@ -429,6 +430,7 @@ With popular events, the loaded seat map will go stale quickly. Users will grow 
 :::tip
 Sometimes the best solution is actually not technically more challenging. The mark of a senior/staff engineer is their ability to solve business problems and sometimes that means thinking outside the box of presumed constraints. The below Good and Great solutions are illustrative of a common delta between senior and staff candidates.
 :::
+
 :::solution-good
 #### Good Solution: SSE for Real-Time Seat Updates
 
@@ -532,6 +534,7 @@ Add [Elasticsearch](https://www.hellointerview.com/learn/system-design/deep-dive
     
 - Maintaining an Elasticsearch cluster adds additional infrastructure complexity and cost.
     
+:::
 
 ![](ticketmaster-8.png)
 
