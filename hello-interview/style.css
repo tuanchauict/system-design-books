@@ -1,3 +1,9 @@
+.section {
+    text-align: center;
+    font-size: 3rem;
+    margin-top: 3rem;
+}
+
 .warning {
     background-color: #fff3cd;
     border: 2px solid #bd8e02;

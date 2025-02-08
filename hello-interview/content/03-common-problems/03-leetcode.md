@@ -1,7 +1,7 @@
 # Design a Code Judge Like LeetCode
 
 :::meta
-LEVEL: MEDIUM | https://www.youtube.com/watch?v=1xHADtekTNg
+LEVEL: MEDIUM | [Watch on YouTube](https://www.youtube.com/watch?v=1xHADtekTNg)
 :::
 
 ## Understanding the Problem
