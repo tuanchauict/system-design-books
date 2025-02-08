@@ -382,6 +382,7 @@ The reality is this is pretty complex, and you would not be expected to go into 
 
 
 ![Pub/Sub with Layer 7 Load Balancer](fb-live-comments-8.png)
+:::
 
 :::warning
 Advanced candidates may point out the tradeoffs in different pub/sub systems. For example, Kafka is a popular pub/sub system that is highly scalable and fault-tolerant, but it has a hard time adapting to scenarios where dynamic subscription and unsubscription based on user interactions, such as scrolling through a live feed or switching live videos, is required. This is due to its pull-based model leading to degraded latency, limited scalability as consumers need to subscribe to all topics, and operational complexity. Redis, on the other hand, is a more suitable option for scenarios requiring dynamic subscription and unsubscription thanks to its efficient in-memory storage and support for both blocking and non-blocking consumption methods, leading to improved latency.
