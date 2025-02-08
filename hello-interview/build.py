@@ -101,6 +101,13 @@ class EpubBuilder:
                 text=True
             )
 
+            for line in result.stdout.split('\n'):
+                print(line)
+
+            print("--------------------")
+            for line in result.stderr.split('\n'):
+                print(line)
+
             print("✅ Successfully built epub!")
 
             # Cleanup
