@@ -1,7 +1,7 @@
 # Design a URL Shortener like Bit.ly
 
 :::meta
-LEVEL: EASY | [Watch on YouTube](https://www.youtube.com/watch?v=iUU4O1sWtJA)
+LEVEL : EASY | [Watch on YouTube](https://www.youtube.com/watch?v=iUU4O1sWtJA)
 :::
 
 ## Understanding the Problem

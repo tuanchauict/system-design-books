@@ -1,7 +1,7 @@
 # Design a File Storage Service Like Dropbox
 
 :::meta
-LEVEL: MEDIUM | [Watch on YouTube](https://www.youtube.com/watch?v=_UZ1ngy-kOI)
+LEVEL : MEDIUM | [Watch on YouTube](https://www.youtube.com/watch?v=_UZ1ngy-kOI)
 :::
 
 ## Understanding the Problem
@@ -57,7 +57,7 @@ It's worth noting that there are related system design problems around designing
 
 Here's how it might look on your whiteboard:
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/58e366d1a9cace15d3894f6f4218e61b)
+![](dropbox-d0.jpg)
 
 :::warning
 Many candidates struggle with the CAP theorem trade-off for this question. Remember, you prioritize consistency over availability only if every read must receive the most recent write; otherwise, the system will break. For example, with a stock trading app, if a user buys a share of APPL in Germany and then another user immediately tries to buy a share of APPL in the US, you need to be sure that the first transaction has been replicated to the US before you can proceed. However, for a file storage system like Dropbox, it's okay if a user in Germany uploads a file and a user in the US can't see it for a few seconds.
@@ -84,7 +84,7 @@ For Dropbox, the primary entities are incredily straightforward:
 
 In the actual interview, this can be as simple as a short list like this. Just make sure you talk through the entities with your interviewer to ensure you are on the same page.
 
-![Core Entities](https://d248djf5mc6iku.cloudfront.net/excalidraw/8bc16ff6fbbbff592c44c2fb21f2fc33)
+![Core Entities](dropbox-d1.jpg)
 
 :::tip
 As you move onto the design, your objective is simple: create a system that meets all functional and non-functional requirements. To do this, I recommend you start by satisfying the functional requirements and then layer in the non-functional requirements afterward. This will help you stay focused and ensure you don't get lost in the weeds as you go.
@@ -168,7 +168,7 @@ As for how we store the file itself, we have a few options. Let's take a look at
 
 The simplest approach we can take is to upload files directly to our backend server (we can call it the File Service) and store them there. Our `POST /files` endpoint will accept the file and metadata, and then store the file on the server's local file system while saving the metadata in our database. This is a reasonable approach for a small application, but it won't scale well and is not reliable.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/1f44729941dadeae2bc61898d1dcd63c)
+![](dropbox-d2.jpg)
 
 **Challenges**
 
@@ -182,7 +182,7 @@ This simple approach has a number of issues. As the number of files grows, we wi
 
 A better approach is to store the file in a Blob Storage service like Amazon S3 or Google Cloud Storage. When a user uploads a file to our backend, we can send the file directly to Blob Storage and store the metadata in our database. We can store a (virtually) unlimited number of files in Blob Storage as it will handle the scaling for us. It's also more reliable. If our server goes down, we don't lose access to our files. We can also take advantage of Blob Storage features like lifecycle policies to automatically delete old files and versioning to keep track of file changes if needed (though this is out of scope for this problem).
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/1232ac3c29f3c0301c70d7ea18e096bd)
+![](dropbox-d3.jpg)
 
 **Challenges**
 
@@ -216,7 +216,7 @@ Request:
 2. Once the file is uploaded, the Blob Storage service will send a notification to our backend using [S3 Notifications](https://docs.aws.amazon.com/AmazonS3/latest/userguide/EventNotifications.html). Our backend will then update the file metadata in our database with a status of "uploaded".
     
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/e0512e86bd7632a5434d0e04a945bf9b)
+![](dropbox-d4.jpg)
 
 :::
 
@@ -261,7 +261,7 @@ GET /files/{fileId}/presigned-url -> PresignedUrl
 1. Use the presigned URL to download the file from the Blob Storage service directly to the client.
     
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/260a143dc98fa7bd45834f9a5e5aca7c)
+![](dropbox-d5.jpg)
 
 **Challenges**
 
@@ -279,7 +279,7 @@ When a user requests a file, we can use the CDN to serve the file from the serve
 
 For security, just like with our S3 presigned URLs, we can generate a URL that the user can use to download the file from the CDN. This URL will give the user permission to download the file from a specific location in the CDN for a limited time. More on this in our [deep dives on security](https://www.hellointerview.com/learn/system-design/problem-breakdowns/dropbox#3-how-can-you-ensure-file-security).
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/b4baa474f180d20f02f18da27180fe72)
+![](dropbox-d6.jpg)
 
 **Challenges**
 
@@ -561,7 +561,7 @@ In practice, you'd rely on this API when designing a system like Dropbox. Howeve
 
 :::
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/86b27d5668364431c4df4a58213c14e5)
+![](dropbox-d9.jpg)
 
 ### 2) How can we make uploads, downloads, and syncing as fast as possible?
 

@@ -1,7 +1,7 @@
 # Design a Ticket Booking Site Like Ticketmaster
 
 :::meta
-LEVEL: MEDIUM | [Watch on YouTube](https://www.youtube.com/watch?v=fhdPyoO6aXI)
+LEVEL : MEDIUM | [Watch on YouTube](https://www.youtube.com/watch?v=fhdPyoO6aXI)
 :::
 
 ## Understanding the Problem

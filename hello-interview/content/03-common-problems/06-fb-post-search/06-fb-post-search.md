@@ -74,7 +74,7 @@ In this case the non-functional requirement that we can take more time for old o
 
 Here’s how these might be shorthanded in an interview. Note that out-of-scope requirements usually stem from questions like “do we need to handle privacy?”. Interviewers are usually comfortable with you making assertions “I’m going to leave privacy out of scope for the start” and will correct you if needed.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/2acd4994e0dbc9b02b85d30b51a1ec88)
+![](06-fb-post-search-d0.jpg)
 
 ## Scale estimations
 
@@ -112,7 +112,7 @@ Wow, that’s a lot of storage! We're going to need to find some way to constrai
 
 For this particular problem, doing these estimations helps us to determine the nature of the design. Reflections like those above help your interviewer understand how your estimations are affecting your design and demonstrate your experience - don’t estimate for the sake of estimation!
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/c6266b272559fc95cdcbbd7cd75b6ce0)
+![](06-fb-post-search-d1.jpg)
 
 ## The Set Up
 
@@ -141,7 +141,7 @@ Our APIs are straightforward. We have two paths: a query path for searching and 
 
 In a real system we might be consuming from a Kafka stream or some other event bus for both of these events, but for clarity we'll create separate API endpoints for each and can let our interviewer know that we'd elect to merge these into the rest of the system as appropriate.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/ae17ff8d79c2e105f3927962244b2483)
+![](06-fb-post-search-d2.jpg)
 
 With these APIs defined, we can start to see the shape of our system. Writes come in via the two write endpoints and are written to a database. Queries come in via the search endpoint and read from the database. Good start!
 
@@ -155,7 +155,7 @@ Our first requirement is on the write path, allowing users to create and like po
 
 Our search system is just a part of the larger social network product, so it's reasonable to assume the existence of an internal "Post Service" and "Like Service" that are responsible for taking client requests. Since we're only designing search, we take for granted that these other services exist and are working as expected.
 
-![Simple ingestion-side design](https://d248djf5mc6iku.cloudfront.net/excalidraw/bab032e375c2d41f0e6ee991986e5266)
+![Simple ingestion-side design](06-fb-post-search-d3.jpg)
 
 
 While we had previously calculated that the scale of Likes and Post creation was very different, the operation of our Ingestion service is very simple at this time, so we'll leave it as a single service and note the potential concern to our interviewer.
@@ -168,7 +168,7 @@ It's a good idea to acknowledge for your interviewer that this solution is obvio
 
 Next, we need to allow users to actually search. To do this we need to set up the read leg of our system. We'll start by adding the basic machinery necessary to serve the user requests: an API gateway for authentication and rate limiting and a horizontally scaled search service which accepts the request then queries the index.
 
-![Allow Search](https://d248djf5mc6iku.cloudfront.net/excalidraw/3df5d9701124d94127730912d8c1fd3d)
+![Allow Search](06-fb-post-search-d4.jpg)
 
 
 The Index is doing a lot of the work for search here. Let's talk about that a bit more. In order to allow users to search posts by keyword, we need to be able to find all of the posts which _contain_ that keyword. With trillions of posts and petabytes of data, this is not a small feat! What are our options?
@@ -180,7 +180,7 @@ The Index is doing a lot of the work for search here. Let's talk about that a bi
 
 The naive solution to this problem is to keep all of the posts in a relational database and use a query like `SELECT * FROM Posts LIKE '%$keyword%';`. This would technically return the correct results for a given query!
 
-![Single Node MySQL](https://d248djf5mc6iku.cloudfront.net/excalidraw/8b8963fe067414b3766d4de0ead6b7dd)
+![Single Node MySQL](06-fb-post-search-d5.jpg)
 
 **Challenges**
 
@@ -196,7 +196,7 @@ Some candidates might see the problem here and think that they can solve this vi
 
 This is a canonical use case for an [Inverted Index](https://www.hellointerview.com/learn/system-design/deep-dives/elasticsearch#inverted-index). You can read more about [inverted indices](https://www.hellointerview.com/learn/system-design/deep-dives/elasticsearch#inverted-index) in the linked Deep Dive for Elasticsearch, but the most important idea behind an inverted index is that we can create a dictionary which maps keywords to the documents that contain them. In this case, we'll create a map from keywords to posts!
 
-![Inverted Index Illustration](https://d248djf5mc6iku.cloudfront.net/excalidraw/e05232145754f8a857d129cc557f2173)
+![Inverted Index Illustration](06-fb-post-search-d6.jpg)
 
 When it comes time for search, we can simply grab the key associated with the keyword from the DB and return the associated posts! So far so good.
 
@@ -210,7 +210,7 @@ Note that these post ID lists are going to get very large, especially for common
 
 We also need to write to many keys for every post since a given post might have 10-1,000 keywords. We'll need to handle some of the scaling challenges associated with this.
 
-![Inverted Index](https://d248djf5mc6iku.cloudfront.net/excalidraw/f6e9ee13370f0c3e59d8df91e1c4d333)
+![Inverted Index](06-fb-post-search-d7.jpg)
 
 :::
 
@@ -227,7 +227,7 @@ Again, we have options here!
 
 The most naive solution we can employ is to grab all of the post IDs for a given keyword, look up the timestamp or like count, then sort those in memory.
 
-![Request-Time Sorting](https://d248djf5mc6iku.cloudfront.net/excalidraw/ab8cc16b943e09be291df225746b12b6)
+![Request-Time Sorting](06-fb-post-search-d8.jpg)
 
 Assuming we're sorting by recency, let's walk through an example. We're going to first make a request to our index for a given keyword. It will return to us a list of Post IDs. For each of these post IDs we'll query the `Post Service` for the created timestamp. Once we retrieve these timestamps, we can sort the posts in the Search Service and return to the user.
 
@@ -251,7 +251,7 @@ For the `likes index`, each key can use a [Redis sorted set](https://www.helloin
 
 When a new post is created, we'll add it to both indexes for every keyword it contains. When a like event happens, we'll update the score in our sorted set for the `likes index`.
 
-![Multiple Indexes](https://d248djf5mc6iku.cloudfront.net/excalidraw/434f96dd9a7ffcc9d4985b105d5765e6)
+![Multiple Indexes](06-fb-post-search-d9.jpg)
 
 **Challenges**
 
@@ -288,7 +288,7 @@ One option for us is to add a distributed cache alongside our search service. Th
 
 We'll want to put an eviction policy on our cache to ensure stale results don't stick around. Since we have up to 1 minute SLA on new posts, we can institute a TTL of < 1 minute on our cache. This will guarantee we're never serving results that might not contain newly created posts.
 
-![Search Cache](https://d248djf5mc6iku.cloudfront.net/excalidraw/8f11a7955ddfda14706ee8c867266e20)
+![Search Cache](06-fb-post-search-d10.jpg)
 
 :::
 
@@ -301,7 +301,7 @@ In addition to the Redis search cache, we can also utilize edge caching via a Co
 
 Using the CDN here is simple: on the response to our `/search` endpoint, we can add `cache-control` headers which tell our CDN when and for how long to cache a result. When a user tries to hit our search service, they'll first go through a geographically local CDN host. In the case of a cache hit, these users will get results in 10s of milliseconds vs the 100s which might have been required if they had to go through our API gateway, to the search service, via a call to the search cache, and back through. If it's not in the cache, we get a request as usual.
 
-![CDN](https://d248djf5mc6iku.cloudfront.net/excalidraw/3962c8529aef40e88a8b952e56a5af35)
+![CDN](06-fb-post-search-d11.jpg)
 :::
 
 ### 2) How can we handle multi-keyword, phrase queries?
@@ -378,7 +378,7 @@ If a lot of posts are created simultaneously, our ingestion service might get ov
 
 We can address this by adding more capacity to our ingestion service and partitioning the incoming requests. By using a log/stream like Kafka, we can fan out the creation requests to multiple ingestion instances and partition the load. We can also buffer requests so that we can handle bursts of post creation. Finally, we can scale out our index by sharding the indexes by keyword. This way writes to the indexes are spread across many indexes.
 
-![Scaling Ingestion](https://d248djf5mc6iku.cloudfront.net/excalidraw/fa24f8236545e0e6c34a7b1064b79c14)
+![Scaling Ingestion](06-fb-post-search-d12.jpg)
 
 #### Like Event
 
@@ -395,7 +395,7 @@ One approach we can take is to batch the writes for likes. Instead of writing ev
 
 To do this we’ll need a secondary "batcher" service which accepts like events and aggregates them over a fixed window (maybe 30 seconds) before writing them back to Kafka to be consumed by the ingestion service.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/04e055f506ce9c28459b11e7f8fcc862)
+![](06-fb-post-search-d13.jpg)
 
 **Challenges**
 
@@ -415,7 +415,7 @@ If we want to retrieve N posts for a given query, we grab the top N*2 posts from
 
 In this case our storage is an approximation but our end result is precise - it has the most recent data. This style of [two-architecture, where we have an approximately correct service that is backed by a more expensive re-ranking](https://www.hellointerview.com/learn/system-design/in-a-hurry/patterns#two-stage-architecture) is very common in information retrieval and recommendation systems.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/fdad991ae220d20018413e84c430e2b3)
+![](06-fb-post-search-d14.jpg)
 
 **Challenges**
 
@@ -435,11 +435,11 @@ Next, most keywords won't be searched often or even at all. Based on our search 
 
 On a regular basis we'll determine which keywords were rarely (or not at all) accessed in the past month. We'll move these indexes from our in-memory Redis instance to a blob in our blob storage. When the index needs to be queried, we'll first try to query Redis. If we don't get our keyword there, we can query the index from our blob storage with a small latency penalty.
 
-![Blob Storage for Cold Indexes](https://d248djf5mc6iku.cloudfront.net/excalidraw/1df40d0cb956c412f7cab1120255b7da)
+![Blob Storage for Cold Indexes](06-fb-post-search-d15.jpg)
 
 Our full design might look like this, although most candidates (especially Mid-level) won't get through all of these deep dives.
 
-![Full Design](https://d248djf5mc6iku.cloudfront.net/excalidraw/600e8a582841a73e638d88821fc6087c)
+![Full Design](06-fb-post-search-d16.jpg)
 
 
 ## [What is Expected at Each Level?](https://www.hellointerview.com/blog/the-system-design-interview-what-is-expected-at-each-level)

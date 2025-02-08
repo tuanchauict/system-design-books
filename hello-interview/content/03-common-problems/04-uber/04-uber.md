@@ -1,7 +1,7 @@
 # Design a Ride Sharing App Like Uber
 
 :::meta
-LEVEL: MEDIUM |  [Watch on YouTube](https://www.youtube.com/watch?v=lsKU38RKQSo)
+LEVEL : MEDIUM |  [Watch on YouTube](https://www.youtube.com/watch?v=lsKU38RKQSo)
 :::
 
 ## Understanding the Problem

@@ -71,7 +71,7 @@ With that in mind, let's document the non-functional requirements:
 
 Here's how it might look on your whiteboard:
 
-![Requirements](https://d248djf5mc6iku.cloudfront.net/excalidraw/47df9913bc05125cf13ba6d1dbd6ab1d)
+![Requirements](07-web-crawler-d0.jpg)
 
 
 ## The Set Up
@@ -115,7 +115,7 @@ Note that this is simple, we will improve upon as we go, but it's important to s
 
 For our high-level design, we will focus on getting a simple system up and running that satisfies our core functional requirements by simply following the data flow we outlined above. We will improve upon this design in the next section.
 
-![Requirements](https://d248djf5mc6iku.cloudfront.net/excalidraw/e990335f1e139dcbb47132177e7339a1)
+![Requirements](07-web-crawler-d1.jpg)
 
 The core components of our high-level design are:
 
@@ -162,7 +162,7 @@ Here's how we might break the crawler service into stages:
 If you get a data processing question like this, your first thought should be to break the system down into smaller, pipelined stages. Pipelining allows you to isolate failures to a single stage and retry that stage without losing progress on the rest of the data. It also allows us to scale each stage independently and optimize each stage for its specific task.
 :::
 
-![Multi-Stage Pipeline](https://d248djf5mc6iku.cloudfront.net/excalidraw/96a04b77ade7917194fe4f9bbd8afb11)
+![Multi-Stage Pipeline](07-web-crawler-d2.jpg)
 
 
 In order to make this work, we need to add some additional state. We'll add a Metadata DB (DynamoDB is fine here. PostgreSQL/MySQL could also work) with a table for URLs that have been fetched and processed. As a starting point, this will store the link to the blob storage where the HTML is stored and the link to the blob storage where the text data is stored. This is important because it is an anti-pattern to store the raw HTML in the queue itself. Queues are not optimized for large payloads and it would be expensive to store the HTML in the queue. Instead, the queue message will just be the id of the URL in the Metadata DB.
@@ -232,7 +232,7 @@ Of course, the same applies if a parsing worker goes down. The URL will remain i
 
 Given SQS's built-in support for retries and exponential backoff and the ease with which visibility timeouts can be configured, **we'll use SQS for our system**.
 
-![SQS with Retry and DLQ](https://d248djf5mc6iku.cloudfront.net/excalidraw/0e13e43cae1da95b9b71928588eeb258)
+![SQS with Retry and DLQ](07-web-crawler-d3.jpg)
 
 :::warning
 When it comes to choosing a technology, there is usually no right or wrong answer. It's all about trade-offs and your ability to justify your decision. Additionally, it's totally reasonable that you would not know the specifics of how Kafka or SQS handle retries. If that's the case, this may not be a place where you choose to go deep.
@@ -301,7 +301,7 @@ A potential issue with this method is the risk of synchronized behavior among mu
 
 Fortunately, there is a relatively simple solution to this problem: jitter. By introducing a small amount of randomness to the rate-limiting algorithm, we can prevent synchronized behavior among crawlers. This jitter can be implemented by adding a random delay to each crawler's request, ensuring that they do not all retry at the same time.
 
-![`Robots.txt` and Rate Limiting](https://d248djf5mc6iku.cloudfront.net/excalidraw/4b3476d3920b1cec33ea1f3f2e7a7303)
+![`Robots.txt` and Rate Limiting](07-web-crawler-d4.jpg)
 
 
 ### 3) How to scale to 10B pages and efficiently crawl them in under 5 days?
@@ -388,7 +388,7 @@ Crawler traps are pages that are designed to keep crawlers on the site indefinit
 
 Fortunately the solution is pretty straight forward, we can implement a maximum depth for our crawlers. We can add a depth field to our URL table in the Metadata DB and increment this field each time we follow a link. If the depth exceeds a certain threshold, we can stop crawling the page. This will prevent us from getting stuck in a crawler trap.
 
-![Scale and Efficiency](https://d248djf5mc6iku.cloudfront.net/excalidraw/367e7851cf16a6bfce6db521a4f9e7ce)
+![Scale and Efficiency](07-web-crawler-d5.jpg)
 
 
 ### Some additional deep dives you might consider

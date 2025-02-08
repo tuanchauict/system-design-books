@@ -57,7 +57,7 @@ It's worth noting that this question is mostly focused on the user recommendatio
 
 Here's how it might look on a whiteboard:
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/545b21f70535c0adff1634eabdd06b19)
+![](08-tinder-d0.jpg)
 
 ## The Set Up
 
@@ -82,7 +82,7 @@ For Tinder, the primary entities are pretty straightforward:
 
 In the actual interview, this can be as simple as a short list like this. Just make sure you talk through the entities with your interviewer to ensure you are on the same page.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/8dac1a406e75492265137204c091af7c)
+![](08-tinder-d1.jpg)
 
 As you move onto the design, your objective is simple: create a system that meets all functional and non-functional requirements. To do this, I recommend you start by satisfying the functional requirements and then layer in the non-functional requirements afterward. This will help you stay focused and ensure you don't get lost in the weeds as you go.
 
@@ -146,7 +146,7 @@ We'll need to take the post request to `POST /profile` and persist these setting
 
 We can do this with a simple client-server-database architecture.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/28804bc5afa751ef03a1fcd2f41173be)
+![](08-tinder-d2.jpg)
 
 1. **Client**: Users interact with the system through a mobile application.
     
@@ -186,7 +186,7 @@ AND lat BETWEEN userLat - maxDistance AND userLat + maxDistance
 AND long BETWEEN userLong - maxDistance AND userLong + maxDistance
 ```
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/e91ff29b08e36422e68f9eb4ed27456b)
+![](08-tinder-d3.jpg)
 
 When a user requests a new set of profiles:
 
@@ -227,7 +227,7 @@ Given that the swipe interaction is so effortless, we can assume we're going to 
 
 [Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) is a good fit as a database here. We can partition by `swiping_user_id`. This means an access pattern to see if user A swiped on user B will be fast, because we can predictably query a single partition for that data. Additionally, Cassandra is extremely capable of massive writes, due to its write-optimized storage engine (`CommitLog + Memtables + SSTables`). A con of using Cassandra here is the element of eventual consistency of swipe data we inherit from using it. We'll discuss ways to avoid this con in later deep dives.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/09df0054ee1155b50d800fad1f42060e)
+![](08-tinder-d4.jpg)
 
 When a user swipes:
 
@@ -250,7 +250,7 @@ But what about `Person A`? They might have swiped on `Person B` weeks ago. We ne
 
 To do this, we're just going to rely on device native push notifications like Apple Push Notification Service (APNS) or Firebase Cloud Messaging (FCM).
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/76f628eefa93c1b772cb057c0af19390)
+![](08-tinder-d5.jpg)
 
 :::tip
 APNS and FCM are both push notification services that we can use to send push notifications to user devices. They both have their own set of native APIs and SDKs that we can use to send users push notifications.
@@ -432,7 +432,7 @@ def handle_swipe(from_user, to_user, direction):
 
 By using Redis's atomic operations via Lua scripts, we can ensure that swipe recording and match checking happen as a single operation. This gives us the consistency we need while maintaining low latency due to Redis's in-memory nature. The system scales horizontally as we can add more Redis nodes, with consistent hashing ensuring related swipes stay together.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/f87dabf92880514ec337d782ea239650)
+![](08-tinder-d6.jpg)
 
 **Challenges**
 
@@ -471,7 +471,7 @@ To handle the scale and performance requirements of an application like Tinder, 
 
 By leveraging the powerful indexing and querying capabilities of these databases, we can generate user feeds in real-time while keeping response times low. This approach ensures that users receive up-to-date matches that align closely with their current preferences and location.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/f55ad3fae65caa5f90a262bca4b9c14f)
+![](08-tinder-d7.jpg)
 
 **Challenges**
 
@@ -489,7 +489,7 @@ Another strategy is to pre-compute and cache user feeds asynchronously. Periodic
 
 By serving these cached feeds, users experience immediate access to potential matches, enhancing their satisfaction. The pre-computation can be scheduled during off-peak hours to reduce the impact on system resources, and frequent updates ensure that the feeds remain relevant.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/b273cefc73efd9cf42b89fa095181800)
+![](08-tinder-d8.jpg)
 
 **Challenges**
 
@@ -513,7 +513,7 @@ By combining the two methods, we maintain low latency throughout the user’s se
 
 We can also trigger the refresh of the stack when a user has a few profiles left to swipe through. This way, as far as the user is concerned, the stack seemed infinite.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/12cfef2931e8f0fdb459a65943674cd7)
+![](08-tinder-d9.jpg)
 :::
 
 Astute readers may realize that by pre-computing and caching a feed, we just introduced a new issue: stale feeds.
@@ -585,7 +585,7 @@ This cache is doubly useful in the situation where a user is close to depleting 
 
 The client works as a part of this system because we can make the assumption that the user is only using this app on one device. Therefore, we can leverage the client as a place to manage and store data.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/37d07a820161c1ed310125f2f8e0f395)
+![](08-tinder-d10.jpg)
 
 **Challenges**
 
@@ -605,7 +605,7 @@ We might consider building on top of our previous approach even more. For users 
 
 A bloom filter would sometimes yield false positives for swipes, meaning we'd sometimes assume a user swiped on a profile that they didn't swipe on. However, the bloom filter would _never_ generate false negatives, meaning we'd never say a user hadn't swiped on a profile they actually _did_ swipe on. This means we'd successfully avoid re-showing profiles, but there might be a small number of profiles that we might never show the user, due to false positives. Bloom filters have tunable error percentages that are usually tied to how much space they take up, so this is something that could be tuned to promote low false positives, reasonable space consumption, and fast filtering of profiles during feed building.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/39050a75d96d148050eeb006ef5da3a5)
+![](08-tinder-d11.jpg)
 
 **Challenges**
 
@@ -614,7 +614,7 @@ The main challenge here is managing the bloom filter cache. It will need to be u
 
 ### Final Design
 
-![Final Design](https://d248djf5mc6iku.cloudfront.net/excalidraw/39050a75d96d148050eeb006ef5da3a5)
+![Final Design](08-tinder-d11.jpg)
 
 
 ## [What is Expected at Each Level?](https://www.hellointerview.com/blog/the-system-design-interview-what-is-expected-at-each-level)
