@@ -75,7 +75,7 @@ We recommend that you start with a broad overview of the primary entities. At th
 
 :::tip
 Just make sure that you let your interviewer know your plan so you're on the same page. I'll often explain that I'm going to start with just a simple list, but as we get to the high-level design, I'll document the data model more thoroughly.
-"""
+:::
 
 To satisfy our key functional requirements, we'll need the following entities:
 

@@ -314,6 +314,7 @@ Users who want to retrieve a particular attachment can then query the blob stora
 **Challenges**
 
 Unfortunately, our Chat Servers still have to handle the incoming media and forward it to the blob storage (a wasted step). Expiring attachments once they've been downloaded by all recipients isn't handled. Managing encryption and security will require extra steps.
+:::
 
 :::solution-good
 #### Great Solution: Manage attachments separately

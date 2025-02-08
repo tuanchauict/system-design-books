@@ -223,6 +223,7 @@ OT requires a central server which can provide a final ordering of operations. T
 
 
 ![Operation Transforms](google-docs-4.png)
+:::
 
 :::solution-good
 #### Good Solution: Conflict-free Replicated Data Types (CRDTs)
