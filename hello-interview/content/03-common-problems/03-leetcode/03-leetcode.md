@@ -469,7 +469,7 @@ Fun fact, this is exactly what [LeetCode](https://leetcode.com/) does when you s
 
 ![LeetCode Network Tab](03-leetcode-d10.png)
 
-###### Challenges
+**Challenges**
 
 There could be a really strong case made that this is overengineering and adding unecessary complexity. Given the scale of the system, it's likely that we could handle the load without the need for a queue and if we require users to register for competitions, we would have a good sense of when to expect peak traffic and could scale up the containers in advance.
 

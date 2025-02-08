@@ -413,7 +413,7 @@ Horizontal Scaling
 - The Event Service is stateless which allows us to horizontally scale it to meet demand. We can do this by adding more instances of the service and load balancing between them.
     
 
-###### Challenges
+**Challenges**
 
 - One of the primary challenges is maintaining consistency between the cache and the database. This is particularly challenging with frequent updates to event details (but we don't expect this)
     
