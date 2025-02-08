@@ -300,11 +300,11 @@ Given that we need to notify the last swiper of the match immediately, we need t
 :::solution-bad
 #### Bad Solution: Database Polling for Matches
 
-##### Approach
+**Approach**
 
 The first thing that comes to mind is to periodically poll the database to check for reciprocal swipes and create matches accordingly. This obviously does not meet our requirement of being able to notify users of a match immediately, so it's a non-starter, though worth mentioning.
 
-##### Challenges
+**Challenges**
 
 This approach introduces latency due to the intervals between polls, meaning users would not receive immediate feedback upon swiping. The lack of instant gratification can significantly diminish user engagement, as the timely dopamine hit associated with immediate match notifications is a critical component of the user experience. Additionally, frequent polling can place unnecessary load on the database, leading to scalability issues.
 :::
@@ -312,13 +312,13 @@ This approach introduces latency due to the intervals between polls, meaning use
 :::solution-good
 #### Good Solution: Transactions
 
-##### Approach
+**Approach**
 
 If we need consistency, our mind should immediately jump to database transactions. We can make sure that both the swipe and the check for a reciprocal swipe happen in the same transaction, so that we either successfully save both or neither.
 
 Cassandra does have basic support for what they call "lightweight transactions" (LWT), but they are not as powerful as true ACID transactions. LWTs use a Paxos consensus protocol to provide linearizable consistency for specific operations, but only within a single partition. Unlike true ACID transactions, they don't support multi-partition atomicity, isolation levels, or rollbacks. They also come with significant performance overhead since they require multiple round trips between nodes to achieve consensus. This makes them suitable for simple conditional updates but not complex transactional workflows.
 
-##### Challenges
+**Challenges**
 
 The main challenge thus becomes an issue of scale. With 20M DAU and 100 swipes per day, that's 2B swipes a day! There is no way this all fits on a single partition which means that transactions will need to span multiple partitions (something unsupported by LWTs).
 
@@ -328,7 +328,7 @@ In the next deep dive, we'll discuss how we can solve this problem by ensuring t
 :::solution-good
 #### Great Solution: Sharded Cassandra with Single-Partition Transactions
 
-##### Approach
+**Approach**
 
 We can leverage Cassandra's single-partition transactions to atomically handle swipes. The key is to ensure that all swipes between two users are stored in the same partition.
 
@@ -374,7 +374,7 @@ def handle_swipe(from_user, to_user, direction):
 
 This approach is effective because Cassandra's single-partition transactions provide the atomicity guarantees we need. By ensuring all swipes between two users are stored in the same partition, we can atomically check for matches without worrying about distributed transaction complexities. The partition key design eliminates the need for cross-partition operations, making the solution both performant and reliable.
 
-##### Challenges
+**Challenges**
 
 While this solution elegantly handles the core matching functionality, it does introduce some operational challenges. As user pairs accumulate swipe history over time, partition sizes can grow significantly, potentially impacting performance. Additionally, highly active users could create hot partitions that receive a disproportionate amount of traffic. To address these issues, we need a robust cleanup strategy to archive or delete old swipe data, preventing partitions from growing unbounded while preserving important historical data.
 :::
@@ -382,7 +382,7 @@ While this solution elegantly handles the core matching functionality, it does i
 :::solution-good
 #### Great Solution: Redis for Atomic Operations
 
-##### Approach
+**Approach**
 
 Redis is a better fit for handling the consistency requirements of our swipe matching logic. While Cassandra excels at durability and storing large amounts of data, it's not designed for the kind of atomic operations we need for real-time match detection. Instead, we can use Redis to handle the atomic swipe operations while still using Cassandra as our durable storage layer.
 
@@ -434,7 +434,7 @@ By using Redis's atomic operations via Lua scripts, we can ensure that swipe rec
 
 ![](https://d248djf5mc6iku.cloudfront.net/excalidraw/f87dabf92880514ec337d782ea239650)
 
-##### Challenges
+**Challenges**
 
 The main challenge with this approach is managing the Redis cluster effectively. While Redis provides excellent performance for atomic operations, we need to carefully handle node failures and rebalancing of the consistent hashing ring. However, these operational challenges are more manageable than trying to achieve consistency in Cassandra.
 
@@ -463,7 +463,7 @@ This certainly won't meet our non-functional requirement of low latency stack ge
 :::solution-good
 #### Good Solution: Use of Indexed Databases for Real-Time Querying
 
-##### Approach
+**Approach**
 
 One method to achieve low latency is by utilizing indexed databases for real-time querying. By creating indexes on the fields most commonly used in feed generation—such as user preferences, age range, and especially geospatial data like location—we can significantly speed up query response times. Implementing a geospatial index allows the system to efficiently retrieve users within a specific geographic area.
 
@@ -473,7 +473,7 @@ By leveraging the powerful indexing and querying capabilities of these databases
 
 ![](https://d248djf5mc6iku.cloudfront.net/excalidraw/f55ad3fae65caa5f90a262bca4b9c14f)
 
-##### Challenges
+**Challenges**
 
 The main challenge here is maintaining data consistency between the primary transactional database and the indexed search database can be complex. Any delay or failure in synchronizing data updates may result in users seeing outdated profiles or missing out on new potential matches.
 
@@ -483,7 +483,7 @@ This can be solved via change data capture (CDC) mechanisms that keep the indexe
 :::solution-good
 #### Good Solution: Pre-computation and Caching
 
-##### Approach
+**Approach**
 
 Another strategy is to pre-compute and cache user feeds asynchronously. Periodic background jobs can generate feeds based on users’ preferences and locations, storing them in a cache for instant retrieval when the user opens the app. This ensures that the feed is readily available without the need for real-time computation.
 
@@ -491,7 +491,7 @@ By serving these cached feeds, users experience immediate access to potential ma
 
 ![](https://d248djf5mc6iku.cloudfront.net/excalidraw/b273cefc73efd9cf42b89fa095181800)
 
-##### Challenges
+**Challenges**
 
 The primary challenge with this approach is that highly active users may quickly exhaust their cached feeds, leading to delays while new matches are generated or fetched. Additionally, pre-computed feeds may not reflect the most recent changes in user profiles, preferences, or the addition of new users to the platform. This could result in less relevant matches and a diminished user experience.
 
@@ -501,7 +501,7 @@ What's worse is that if the user swipes through their pre-computed cached stack,
 :::solution-good
 #### Great Solution: Combination of Pre-computation and Indexed Database
 
-##### Approach
+**Approach**
 
 The good news is we can have the best of both worlds by combining the benefits of both pre-computation and real-time querying using an indexed database.
 
@@ -551,11 +551,11 @@ We should design a solution to prevent this bad user experience.
 :::solution-bad
 #### Bad Solution: DB Query + Contains Check
 
-##### Approach
+**Approach**
 
 Given our previous design, we can consider having our feed builder service query the swipe database and do a contains check to filter out users who have been swiped on before. The query to get all the swiped-on profiles will be efficient because it will be routed to the appropriate partition based on `swiping_user_id`.
 
-##### Challenges
+**Challenges**
 
 There's 2 challenges this approach presents:
 
@@ -568,7 +568,7 @@ There's 2 challenges this approach presents:
 :::solution-good
 #### Great Solution: Cache + DB Query + Contains Check
 
-##### Approach
+**Approach**
 
 Building off the previous approach, we might consider doing contains queries on the backend and adding a cache that houses recent user swipes to avoid the problems presented with an availability-skewing system. _However_, we wouldn't manage this cache on the backend. We'd manage it client-side.
 
@@ -587,7 +587,7 @@ The client works as a part of this system because we can make the assumption tha
 
 ![](https://d248djf5mc6iku.cloudfront.net/excalidraw/37d07a820161c1ed310125f2f8e0f395)
 
-##### Challenges
+**Challenges**
 
 This solution is still subjected to the problems created by users with extensive swipe histories and large user ID contains checks that get slower as the user swipes more.
 :::
@@ -595,7 +595,7 @@ This solution is still subjected to the problems created by users with extensive
 :::solution-good
 #### Great Solution: Cache + Contains Check + Bloom Filter
 
-##### Approach
+**Approach**
 
 :::warning
 this approach skews somewhat "over-engineered", but is a legit usecase for a bloom filter to support feed building for users with large swipe histories.
@@ -607,7 +607,7 @@ A bloom filter would sometimes yield false positives for swipes, meaning we'd so
 
 ![](https://d248djf5mc6iku.cloudfront.net/excalidraw/39050a75d96d148050eeb006ef5da3a5)
 
-##### Challenges
+**Challenges**
 
 The main challenge here is managing the bloom filter cache. It will need to be updated and also recovered if the cache goes down. A bloom filter is easy to re-create with the swipe data, but this would be expensive at scale in the event of a node outage.
 :::
