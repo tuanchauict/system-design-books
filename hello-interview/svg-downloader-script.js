@@ -51,10 +51,13 @@ function processSVG(svg, index, prefix, targetWidth) {
                     
                     // Draw the image on the canvas with the target dimensions
                     ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+                    // Enable high-quality rendering
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
                     
                     // Convert canvas to PNG
                     DOMURL.revokeObjectURL(url);
-                    const imgURI = canvas.toDataURL('image/png');
+                    const imgURI = canvas.toDataURL('image/png', 1.0);
                     
                     // Create download link with prefix in filename
                     const downloadLink = document.createElement('a');
@@ -70,7 +73,7 @@ function processSVG(svg, index, prefix, targetWidth) {
                         document.body.removeChild(downloadLink);
                         console.log(`Download completed for image ${index}`);
                         resolve();
-                    }, index * 100); // 500ms delay between each download
+                    }, index * 10); // 500ms delay between each download
                     
                 } catch (error) {
                     console.error(`Error processing SVG ${index}:`, error);
@@ -79,6 +82,8 @@ function processSVG(svg, index, prefix, targetWidth) {
             };
             
             // Set image source to SVG URL
+            // Enable crisp image rendering
+            img.style.imageRendering = 'crisp-edges';
             img.src = url;
             
         } catch (error) {
@@ -92,7 +97,7 @@ function processSVG(svg, index, prefix, targetWidth) {
 async function downloadSVGAsPNG() {
     try {
         // Fixed width for all PNGs
-        const targetWidth = 2000;
+        const targetWidth = 2500;
         
         // Get filename prefix from URL
         const prefix = getLastPathSegment();

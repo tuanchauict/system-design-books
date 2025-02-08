@@ -74,7 +74,7 @@ kafka-console-producer --broker-list localhost:9092 \
     --property "parse.key=true" \
     --property "key.separator=:" 
 > key1: Hello, Kafka with key! 
-> > key2: Another message with a different key
+> key2: Another message with a different key
 ```
 
 :::info

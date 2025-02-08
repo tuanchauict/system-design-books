@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import subprocess
-import re
 import shutil
 from pathlib import Path
 
@@ -81,7 +80,7 @@ class EpubBuilder:
                 '-f', 'markdown+smart',
                 '-t', 'epub3',
                 '--toc',
-                '--toc-depth=2',
+                '--toc-depth=3',
                 '--resource-path', ":".join(str(f.parent) for f in content_files),  # Add resource path
                 '-o', str(self.output_dir / 'book.epub'),
                 str(self.metadata_file),

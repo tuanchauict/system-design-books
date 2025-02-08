@@ -38,7 +38,7 @@ The choice of keys is important as these keys might be stored in separate nodes 
 
 Redis' wire protocol is a custom query language comprised of simple strings which are used for all functionality of Redis. The CLI is really simple, you can literally connect to a Redis instance and run these commands from the CLI.
 
-```
+```bash
 SET foo 1  
 GET foo     # Returns 1
 INCR foo    # Returns 2
@@ -95,7 +95,7 @@ In [Post Search](https://www.hellointerview.com/learn/system-design/problem-brea
 
 We can use Redis' sorted sets to maintain a list of the top liked posts for a given keyword. Periodically, we can remove low-ranked posts to save space.
 
-```
+```bash
 ZADD tiger_posts 500 "SomeId1" # Add the Tiger woods post
 ZADD tiger_posts 1 "SomeId2" # Add some tweet about zoo tigers
 ZREMRANGEBYRANK tiger_posts 0 -5 # Remove all but the top 5 posts
@@ -111,7 +111,7 @@ Implementation of this in Redis is simple. When a request comes in, we increment
 
 Redis natively supports geospatial indexes with commands like `GEOADD` and `GEORADIUS`. The basic commands are simple:
 
-```
+```bash
 # Adds "member" to the index at key "key"
 GEOADD key longitude latitude member
 # Searches the index at key "key" at specified position and radius
