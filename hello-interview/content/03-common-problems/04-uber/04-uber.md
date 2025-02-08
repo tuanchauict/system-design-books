@@ -71,7 +71,7 @@ LEVEL: MEDIUM |  [Watch on YouTube](https://www.youtube.com/watch?v=lsKU38RKQSo)
 4. The system should facilitate easy updates and maintenance without significant downtime (CI/CD pipelines).
     
 
-![Uber Requirements](https://d248djf5mc6iku.cloudfront.net/excalidraw/9f8294d97a3bfe23bdf205a54f9cb212)
+![Uber Requirements](04-uber-d0.jpg)
 
 :::warning
 Adding features that are out of scope is a "nice to have". It shows product thinking and gives your interviewer a chance to help you reprioritize based on what they want to see in the interview. That said, it's very much a nice to have. If additional features are not coming to you quickly, don't waste your time and move on.
@@ -102,7 +102,7 @@ To satisfy our key functional requirements, we'll need the following entities:
 
 In the actual interview, this can be as simple as a short list like this. Just make sure you talk through the entities with your interviewer to ensure you are on the same page.
 
-![Uber Core Entities](https://d248djf5mc6iku.cloudfront.net/excalidraw/ed3a692c10d752fd83bd81aff83d2ab6)
+![Uber Core Entities](04-uber-d1.jpg)
 
 
 Now, let's proceed to design our system, tackling each functional requirement in sequence. This step-by-step approach will help us maintain focus and manage scope effectively, ensuring a cohesive build-up of the system's architecture.
@@ -171,7 +171,7 @@ The first thing that users will do when they open the app to request a ride is s
 
 Lets lay out the necessary components for communicating between the client and our microservices, adding our first service, “Ride Service” which will handle fare estimations
 
-![Uber Simple Fare Estimation](https://d248djf5mc6iku.cloudfront.net/excalidraw/bb63f5bb9e6d7e6fb7bc7a391e0c67ae)
+![Uber Simple Fare Estimation](04-uber-d2.jpg)
 
 Uber Simple Fare Estimation
 
@@ -207,7 +207,7 @@ Once a user reviews the estimated fare and ETA, they can request a ride. By buil
 
 We don't need to add any new entities at all, we just need to add a Ride table to our Database.
 
-![Uber Simple Ride Matching](https://d248djf5mc6iku.cloudfront.net/excalidraw/001f76b5fa1af5a9dce3f813140c5a29)
+![Uber Simple Ride Matching](04-uber-d3.jpg)
 
 Then, when a request comes in, this is how we handle it.
 
@@ -231,7 +231,7 @@ Now we need to introduce some new components in order to facilitate driver match
 3. **Ride Matching Service**: Handles incoming ride requests and utilizes a sophisticated algorithm (abstracted away for the purpose of this interview) to match these requests with the best available drivers based on proximity, availability, driver rating, and other relevant factors.
     
 
-![Uber Simple Ride Matching](https://d248djf5mc6iku.cloudfront.net/excalidraw/712222a61a1d6562495101b66bb1d89e)
+![Uber Simple Ride Matching](04-uber-d4.jpg)
 
 
 Let's walk through the sequence of events that occur when a user requests a ride and the system matches them with a nearby driver:
@@ -256,7 +256,7 @@ We only need to add one additional service to our existing design.
 1. **Notification Service**: Responsible for dispatching real-time notifications to drivers when a new ride request is matched to them. It ensures that drivers are promptly informed so they can accept ride requests in a timely manner, thus maintaining a fluid user experience. Notifications are sent via APN (Apple Push Notification) and FCM (Firebase Cloud Messaging) for iOS and Android devices, respectively.
     
 
-![Uber Simple Driver Accept](https://d248djf5mc6iku.cloudfront.net/excalidraw/123d566aa65ff11f66da2434fe950d7f)
+![Uber Simple Driver Accept](04-uber-d5.jpg)
 
 
 Let's walk through the sequence of events that occur when a driver accepts a ride request and completes the ride:
@@ -345,7 +345,7 @@ The main challenge with this approach would be durability. Since Redis is an in-
 
 Even if we experience data loss due to a system failure, the impact would be minimal. Since driver location updates come in every 5 seconds, we would only need that long to recover and rebuild the state of our system. This quick recovery time ensures that our system remains robust and reliable, even in the face of potential failures.
 
-![Redis for Locations](https://d248djf5mc6iku.cloudfront.net/excalidraw/7e72681e6f783b669cafb405dd2a9837)
+![Redis for Locations](04-uber-d6.jpg)
 
 :::
 
@@ -417,7 +417,7 @@ To solve the timeout issue, we can use a distributed lock implemented with an in
 
 The main challenge with this approach is the system's reliance on the availability and performance of the in-memory data store for locking. This requires robust monitoring and failover strategies to ensure that the system can recover quickly from failures and that locks are not lost or corrupted. Given locks are only held for 10 seconds, this is a reasonable tradeoff as the emphemorality of the data makes it easier to recover from failures.
 
-![Locking with TTL](https://d248djf5mc6iku.cloudfront.net/excalidraw/398aae531e13d977ac993ed45ad9612f)
+![Locking with TTL](04-uber-d7.jpg)
 
 :::
 
@@ -455,7 +455,7 @@ The main challenge with this approach is the complexity of managing a queueing s
 
 The other issue with this approach is that since it is a FIFO queue you could have requests that are stuck behind a request that is taking a long time to process. This is a common issue with FIFO queues and can be addressed by using a priority queue instead. This allows us to prioritize requests based on factors like driver proximity, driver rating, and other relevant factors. This ensures that the most important requests are processed first, leading to a better user experience.
 
-![Match Queue](https://d248djf5mc6iku.cloudfront.net/excalidraw/0ef743fd4eec2a83eda591edc673442d)
+![Match Queue](04-uber-d8.jpg)
 :::
 
 ### 5) How can you further scale the system to reduce latency and improve throughput?
@@ -486,7 +486,7 @@ The main challenge with this approach is the complexity of sharding and managing
 
 After applying the "Great" solutions, your updated whiteboard should look something like this:
 
-![Uber Final](https://d248djf5mc6iku.cloudfront.net/excalidraw/7d9ec3dbaa245e568ad98d2274a21015)
+![Uber Final](04-uber-d9.jpg)
 
 ## [What is Expected at Each Level?](https://www.hellointerview.com/blog/the-system-design-interview-what-is-expected-at-each-level)
 

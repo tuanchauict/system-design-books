@@ -66,7 +66,7 @@ It's important to note that LeetCode only has a few hundred thousand users and r
 
 Here's how it might look on your whiteboard:
 
-![LeetCode Requirements](https://d248djf5mc6iku.cloudfront.net/excalidraw/c56b169c8d83dd57b2942d088d13ae8b)
+![LeetCode Requirements](03-leetcode-d0.jpg)
 
 :::warning
 Adding features that are out of scope is a "nice to have". It shows product thinking and gives your interviewer a chance to help you reprioritize based on what they want to see in the interview. That said, it's very much a nice to have. If additional features are not coming to you quickly, don't waste your time and move on.
@@ -93,7 +93,7 @@ To satisfy our key functional requirements, we'll need the following entities:
 
 In the actual interview, this can be as simple as a short list like this. Just make sure you talk through the entities with your interviewer to ensure you are on the same page. You can add User here too; many candidates do, but in general, I find this implied and not necessary to call out.
 
-![Leetcode Entities](https://d248djf5mc6iku.cloudfront.net/excalidraw/29a7b1e81c3909ab4334f3a9197768ed)
+![Leetcode Entities](03-leetcode-d1.jpg)
 
 :::tip
 As you move onto the design, your objective is simple: create a system that meets all functional and non-functional requirements. To do this, I recommend you start by satisfying the functional requirements and then layer in the non-functional requirements afterward. This will help you stay focused and ensure you don't get lost in the weeds as you go.
@@ -156,7 +156,7 @@ The majority of systems designed in interviews are best served with a microservi
 
 To view a list of problems, we'll need a simple server that can fetch a list of problems from the database and return them to the user. This server will also be responsible for handling pagination.
 
-![Viewing a List of Problems](https://d248djf5mc6iku.cloudfront.net/excalidraw/29171b8ddaadf17b6846a6913a8a2760)
+![Viewing a List of Problems](03-leetcode-d2.jpg)
 
 Viewing a List of Problems
 
@@ -196,7 +196,7 @@ The `codeStubs` for each language would either need to be manually entered by an
 
 To view a problem, the client will make a request to the API server with `GET /problems/:id` and the server will return the full problem statement and code stub after fetching it from the database. We'll use a [Monaco Editor](https://microsoft.github.io/monaco-editor/) to allow users to code their solution in the browser.
 
-![Viewing a Specific Problem](https://d248djf5mc6iku.cloudfront.net/excalidraw/0ad60cb404977f7e68c9ffc220e32c5d)
+![Viewing a Specific Problem](03-leetcode-d3.jpg)
 
 ### 3) Users should be able to submit their solution and get instant feedback
 
@@ -232,7 +232,7 @@ A better way to run user submitted code is to run it in a [virtual machine (VM)]
 
 The main challenge with this approach is that VMs are resource intensive and can be slow to start up. This means that you'll need to carefully manage your VMs to ensure that you're not wasting resources and that you can quickly spin up new VMs as needed. Additionally, you'll need to be careful about how you manage the lifecycle of your VMs to ensure that you're not running out of resources or leaving VMs running when they're not needed which can prove costly.
 
-![Running User Code in a VM](https://d248djf5mc6iku.cloudfront.net/excalidraw/6e0bf4ac0c46e0b34d97d4265e210b3d)
+![Running User Code in a VM](03-leetcode-d4.jpg)
 :::
 
 :::solution-good
@@ -252,7 +252,7 @@ We would create a container for each runtime that we support (e.g. Python, JavaS
 
 Given that containers share the host OS kernel, we need to properly configure and secure the containers to prevent users from breaking out of the container and accessing the host system. We also need to enforce resource limits to prevent any single submission from utilizing excessive system resources and affecting other users. More about these optimizations in the deep dive below.
 
-![Run Code in Containers](https://d248djf5mc6iku.cloudfront.net/excalidraw/f6d9fb31fbce646b872d6b8cdfa28e59)
+![Run Code in Containers](03-leetcode-d5.jpg)
 :::
 
 :::solution-good
@@ -271,7 +271,7 @@ The main challenge with this approach is that serverless functions have a cold s
 
 While Serverless (lambda) functions are a great option, I am going to proceed with the container approach given I don't anticipate a significant variance in submission volume and I'd like to avoid any cold start latency. So with our decision made, let's update our high-level design to include a container service that will run the user's code and break down the flow of data through the system.
 
-![Running User Code in a Container](https://d248djf5mc6iku.cloudfront.net/excalidraw/d2a92823af7c20003fbc959dad564abb)
+![Running User Code in a Container](03-leetcode-d6.jpg)
 
 
 
@@ -313,7 +313,7 @@ In a NoSQL DB like DynamoDB, you'd need to have the partition key be the `compet
 
 Once we have the leaderboard, we'll pass it back to the client to display. In order to make sure it's fresh, the client will need to request the leaderboard again after every ~5 seconds or so.
 
-![Leaderboard](https://d248djf5mc6iku.cloudfront.net/excalidraw/be20083205ad60304463a8a48a553315)
+![Leaderboard](03-leetcode-d7.jpg)
 
 Tying it all together:
 
@@ -357,7 +357,7 @@ By running our code in an isolated container, we've already taken a big step tow
 Note that in an interview you're likely not expected to go into a ton of detail on how you'd implement each of these security measures. Instead, focus on the high-level concepts and how they would help to secure the system. If your interviewer is interested in a particular area, they'll ask you to dive deeper. To be concrete, this means just saying, "We'd use docker containers while limiting network access, setting CPU and memory bounds, and enforcing a timeout on the code execution" is likely sufficient.
 :::
 
-![Security](https://d248djf5mc6iku.cloudfront.net/excalidraw/bc19de62355e0e050f691f3bc2a784b8)
+![Security](03-leetcode-d8.jpg)
 
 
 ### 2) How would you make fetching the leaderboard more efficient?
@@ -409,7 +409,7 @@ This approach offers several advantages. It's simpler to implement compared to W
 
 :::
 
-![Redis Sorted Set with Periodic Polling](https://d248djf5mc6iku.cloudfront.net/excalidraw/a1783e5526947683d62600fd0bd1fbd0)
+![Redis Sorted Set with Periodic Polling](03-leetcode-d9.jpg)
 
 :::warning
 Many candidates that I ask this question of propose a Websocket connection for realtime updates.
@@ -467,7 +467,7 @@ Some candidates try to introduce a persistent connection like WebSockets to avoi
 
 Fun fact, this is exactly what [LeetCode](https://leetcode.com/) does when you submit a solution to a problem. Click submit with your network tab open and you'll see the polling in action!
 
-![LeetCode Network Tab](https://www.hellointerview.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fleetcode-network.895fd6e4.png&w=3840&q=75)
+![LeetCode Network Tab](03-leetcode-d10.png)
 
 ###### Challenges
 
@@ -475,7 +475,7 @@ There could be a really strong case made that this is overengineering and adding
 
 :::
 
-![Scaling with Queue](https://d248djf5mc6iku.cloudfront.net/excalidraw/a8cc459df0cbaacafdb7a3ac2cac5bcf)
+![Scaling with Queue](03-leetcode-d11.jpg)
 
 
 
@@ -538,7 +538,7 @@ We'd need to define the serialization strategy for each data structure and ensur
 
 Putting it all together, one final design could look like this:
 
-![Final LeetCode Design](https://d248djf5mc6iku.cloudfront.net/excalidraw/acdc4852dd458637565ebf1ed640e2fd)
+![Final LeetCode Design](03-leetcode-d12.jpg)
 
 
 ## [What is Expected at Each Level?](https://www.hellointerview.com/blog/the-system-design-interview-what-is-expected-at-each-level)

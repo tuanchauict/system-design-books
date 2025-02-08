@@ -72,7 +72,7 @@ An important consideration in this system is the significant imbalance between r
 
 Here is what you might write on the whiteboard:
 
-![Bit.ly Non-Functional Requirements](https://d248djf5mc6iku.cloudfront.net/excalidraw/50a83b177c447d62d54ec0874c8d04de)
+![Bit.ly Non-Functional Requirements](01-bitly-d0.jpg)
 
 
 ## The Set Up
@@ -96,7 +96,7 @@ In a URL shortener, the core entities are very straightforward:
 
 In the actual interview, this can be as simple as a short list like this. Just make sure you talk through the entities with your interviewer to ensure you are on the same page.
 
-![Bit.ly Entities](https://d248djf5mc6iku.cloudfront.net/excalidraw/3e089b8f674fdeefac57740bc303d432)
+![Bit.ly Entities](01-bitly-d1.jpg)
 
 ### [The API](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#4-api-or-system-interface)
 
@@ -153,7 +153,7 @@ The first thing we need to consider when designing this system is how we're goin
 
 We'll outline the core components necessary to make this happen at a high-level.
 
-![Create a short url](https://d248djf5mc6iku.cloudfront.net/excalidraw/395831cae417d3d32f73cf7e79ee766c)
+![Create a short url](01-bitly-d2.jpg)
 
 1. **Client**: Users interact with the system through a web or mobile application.
     
@@ -187,7 +187,7 @@ When a user submits a long url, the client sends a POST request to /urls with th
 
 Now our short URL is live and users can access the original URL by using the shortened URL. Importantly, this shortened URL exists at a domain that we own! For example, if our site is located at `short.ly`, then our short urls look like `short.ly/abc123` and all requests to that short url go to our Primary Server.
 
-![Redirect to original url](https://d248djf5mc6iku.cloudfront.net/excalidraw/8e6bc3830adfc2606d6265077d5791a6)
+![Redirect to original url](01-bitly-d3.jpg)
 
 When a user accesses a shortened URL, the following process occurs:
 
@@ -285,7 +285,7 @@ short_code_encoded = base62_encode(random_number)
 short_code = short_code_encoded[:8] # 8 characters
 ```
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/83f136e7c2c9f0fde45072f970e36ef6)
+![](01-bitly-d4.jpg)
 
 **Challenges**
 
@@ -303,7 +303,7 @@ Redis is particularly well-suited for managing this counter because it's single-
 
 Each counter value is unique, eliminating the risk of collisions without the need for additional checks. Incrementing a counter and encoding it is computationally efficient, supporting high throughput. With proper counter management, the system can scale horizontally to handle massive numbers of URLs. The short code can be easily decoded back to the original ID if needed, aiding in database lookups.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/7f6720321b39443d5cb96b6bdd4f26a2)
+![](01-bitly-d5.jpg)
 
 **Challenges**
 
@@ -373,7 +373,7 @@ This means memory access is about 1,000 times faster than SSD and 100,000 times 
 - HDD: ~100-200 IOPS
     
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/27faf227a926ba4ac42e839d382cb10d)
+![](01-bitly-d6.jpg)
 
 **Challenges**
 
@@ -434,7 +434,7 @@ Horizontally scaling our write service introduces a significant issue! For our s
 
 We could solve this by using a centralized Redis instance to store the counter. This Redis instance can be used to store the counter and any other metadata that needs to be shared across all instances of the Write Service. Redis is single-threaded and is very fast for this use case. It also supports atomic increment operations which allows us to increment the counter without any issues. Now, when a user requests to shorten a url, the Write Service will get the next counter value from the Redis instance, compute the short code, and store the mapping in the database.
 
-![Final Design](https://d248djf5mc6iku.cloudfront.net/excalidraw/e555d3d4a54f516eeb857c98021f2ab9)
+![Final Design](01-bitly-d7.jpg)
 
 
 But should we be concerned about the overhead of an additional network request for each new write request?
