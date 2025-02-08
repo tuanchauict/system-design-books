@@ -30,7 +30,7 @@ def download_images(markdown_file):
                 else:  # Guess or default
                     ext = ".jpg"
 
-                image_file_name = f"{doc_name}-d{image_index}{ext}"
+                image_file_name = f"i-{doc_name}-d{image_index}{ext}"
                 filepath = os.path.join(doc_path, image_file_name)
 
                 if not os.path.exists(filepath):

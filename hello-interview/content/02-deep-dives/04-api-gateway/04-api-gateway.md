@@ -39,7 +39,7 @@ Let's walk through a request from start to finish. Incoming requests come into t
 6. Optionally cache the response for future requests
     
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/2da8c1e0e278e9cad23a817b22ff3173)
+![](i-04-api-gateway-d0.jpg)
 
 Let's take a closer look at each step.
 

@@ -35,7 +35,7 @@ In DynamoDB, data is organized into tables, where each table has multiple items 
 
 Setting up DynamoDB is straightforward: you can create tables directly in the AWS console, and start inserting data immediately. Unlike traditional RDBMS, DynamoDB is schema-less, meaning you don't need to define a schema before inserting data. This means items in the same table can have different sets of attributes, and new attributes can be added to items at any point without affecting existing items. This schema-less design provides high flexibility but requires careful data validation at the application level, as DynamoDB does not enforce attribute uniformity across items.
 
-![Create Table](https://www.hellointerview.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fdynamo-create-table.71d9a974.png&w=3840&q=75)
+![Create Table](i-06-DynamoDB-d0.png)
 
 Create Table
 

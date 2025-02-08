@@ -25,7 +25,7 @@ Cassandra has a set of basic data definitions that define how store and interact
 - **Column** - A column contains data belonging to a row. A column is represented by a name, a type, and a value corresponding to the value of that column for a row. Not all columns need to be specified per row in a Cassandra table; Cassandra is a [**wide-column database**](https://www.scylladb.com/glossary/wide-column-database/) so the specified columns can vary per row in a table, making Cassandra more flexible than something like a relational database, which requires an entry for every column per row (even if that entry is NULL). Additionally, every column has timestamp metadata associated with it, denoting when it was written. When a column has a write conflict between replicas, it is resolved via "last write wins".
     
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/7cbaeb89277750f28a5aeab41ca80871)
+![](i-05-cassandra-d0.jpg)
 
 At the most basic level, you can liken Cassandra's data structures to a large JSON.
 
@@ -109,13 +109,13 @@ To improve on this design, consistent hashing prefers a different approach.
 
 Rather than hashing a value and running a modulo to select a node, consistent hashing hashes a value to a range of integers that are visualized on a ring. This ring has nodes mapping to specific values. When a value is hashed, it is hashed to an integer. The ring is then walked clockwise to find the first value corresponding to a node. The value is then stored on that node.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/24054a9b753c1089c79054fd3e9bf38c)
+![](i-05-cassandra-d1.jpg)
 
 This design prevents excess re-mapping of values if a node enters or leaves the system because it will affect one adjacent node. If a node enters, it re-maps some values from the node ahead of it when moving clockwise on the ring. If a node exits, values from the node exiting re-map to the node ahead of it when moving clockwise on the ring.
 
 However, this design doesn't address the issue of uneven load between nodes. To address this, Cassandra opts to map multiple nodes on the ring to physical nodes in the distributed system. The nodes on the ring are called `vnodes` (a.k.a. virtual nodes) are owned by physical nodes. This distributes load over the cluster more evenly. It also allows for the system to take advantage of the resources of different physical nodes; some physical nodes might be bigger machines with more resources, so they can be responsible for more `vnodes`. Below is how the cluster might look, with values, called "tokens" (`t1`, `t2`, etc.), represented on the ring, `vnodes` mapped to those tokens, and different physical nodes represented by the colors of the `vnodes`.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/c4bd45f5434459f5eb5733247f257e24)
+![](i-05-cassandra-d2.jpg)
 
 ### Replication
 
@@ -123,7 +123,7 @@ In Cassandra, partitions of data are replicated to nodes on the ring, enabling i
 
 At a high level, Cassandra chooses what nodes to replicate data to by scanning clockwise from the `vnode` that corresponds to hashed value in a consistent hashing scheme. For example, if Cassandra is trying to replicate data to 3 nodes, it will hash a value to a node and scan clockwise to find 2 additional `vnodes` to serve as replicas. Of note, Cassandra skips any `vnodes` that are on the same physical node as `vnodes` already in the replica set so that several replicas aren't down when a single physical node goes down.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/17c41cc975d5bb0fb9580262539dae2f)
+![](i-05-cassandra-d3.jpg)
 
 Cassandra has two different "replication strategies" it can employ: [**`NetworkTopologyStrategy`**](https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html#network-topology-strategy) and [**`SimpleStrategy`**](https://cassandra.apache.org/doc/latest/cassandra/architecture/dynamo.html#simple-strategy).
 
@@ -151,7 +151,7 @@ Cassandra allows you to choose from a list of "consistency levels" for reads and
 
 One notable consistency level to understand is `QUORUM`. `QUORUM` requires a majority `(n/2 + 1)` of replicas to respond. Applying `QUORUM` to both reads and writes guarantees that writes are visible to reads because at least one overlapping node is guaranteed to participate in both a write and a read. To illustrate this, let's assume a set of 3 nodes. `3/2 + 1 = 2`, so 2 of 3 nodes need to be written to and read from in order for writes and reads to succeed. This means that a write will always be seen by a read because at least 1 of those 2 nodes will have also seen the write.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/4611cde4a57695e82c36f6814e773f6a)
+![](i-05-cassandra-d4.jpg)
 
 :::info
 Typically, Cassandra aims for "eventual consistency" for all consistency levels, where all replicas have the latest data assuming enough time passes.
@@ -161,7 +161,7 @@ Typically, Cassandra aims for "eventual consistency" for all consistency levels,
 
 Any Cassandra node can service a query from the client application because all nodes in Cassandra can assume the role of a query "coordinator". Nodes in Cassandra each know about other alive nodes in the cluster. They share cluster information via a protocol called "gossip" (discussed later). Nodes in Cassandra also are able to determine where data lives in the cluster via performing consistent hashing calculations and by knowing the replication strategy / consistency level configured for the data. When a client issues a query, it selects a node who becomes the coordinator, and the coordinator issues queries to nodes that store the data (a series of replicas).
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/32d9e2a16421ba4a50ccdf25b59a698f)
+![](i-05-cassandra-d5.jpg)
 
 ### Storage Model
 
@@ -193,7 +193,7 @@ With all these constructs working together, writes look like this:
 
 The below diagram illustrates the above steps:
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/e12286f3df71b453048634738c40a8ce)
+![](i-05-cassandra-d6.jpg)
 
 To summarize, a Memtable houses recent writes, consolidating writes for a keys into a single row, and is occasionally flushed to disk as an immutable SSTable. A commit log serves as a write-ahead-log to ensure data isn't lost if it is only in the Memtable and the node goes down.
 
@@ -224,7 +224,7 @@ Cassandra leverages a [**Phi Accrual Failure Detector**](https://www.computer.or
 
 In the presence of write attempts to nodes that are considered "offline", Cassandra leverages a technique called "hinted handoffs." When a node is considered offline by a coordinator node attempting to write to it, the coordinator temporarily stores the write data in order for the write to proceed. This temporary data is called a "hint." When the offline node is detected as online, the node (or nodes) with a hint sends that data to the previously-offline node. Below is how this looks in practice.
 
-![](https://d248djf5mc6iku.cloudfront.net/excalidraw/f3fdec3dfb9c97808ab5af988628552a)
+![](i-05-cassandra-d7.jpg)
 
 Of note, hinted handoffs are mostly used as a short term way to prevent a node that is offline from losing writes. Any node that is offline for a long time will either be rebuilt or undergo read repairs, as hints usually have a short lifespan.
 
@@ -319,11 +319,11 @@ This schema has problems, however. For events this 10,000+ tickets, the database
 
 One of the hints for how we might improve our schema lies within the Ticketmaster ticket browsing UI user experience (UX). Consider the UX when a user starts browsing tickets. They see a venue map with sections. Each section might have a popover with high-level information about the ticket availability / price information for that section.
 
-![](https://www.hellointerview.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fcassandra-1.1bbeee9d.png&w=1920&q=75)
+![](i-05-cassandra-d8.png)
 
 If a user clicks into a section of interest, Ticketmaster's UI then shows the individual seats and ticket information.
 
-![](https://www.hellointerview.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fcassandra-2.3ba7a114.png&w=3840&q=75)
+![](i-05-cassandra-d9.png)
 
 This UX unveils that we can add the concept of `section_id` to our tickets table, and have the `section_id` as part of the partition key. This means the `tickets` table now services the query to view individual seat tickets for a given section. The new schema looks like this:
 
