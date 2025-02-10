@@ -26,6 +26,7 @@ class GitHubMarkdownConverter(MarkdownConverter):
         prefix = {
             'info': '[!NOTE]',
             'tip': '[!TIP]',
+            # 'problem': '[!PROBLEM]',
             'warning': '[!CAUTION]',
             'solution.bad': '[!WARNING]',
             'solution.good': '[!IMPORTANT]',
@@ -85,6 +86,11 @@ def preprocess(html_str: str):
         div.name = 'blockquote'
         div.attrs = {'class': 'solution.great'}
         
+    # Replace all div with class `MuiBox-root mui-1fz7ihe` with blockquote and problem class
+    for div in soup.find_all('div', class_='MuiBox-root mui-1fz7ihe'):
+        div.name = 'blockquote'
+        div.attrs = {'class': 'problem'}
+        
     # Replace all div with with id `panel1bh-header` with h4 tag
     for div in soup.select('#panel1bh-header'):
         div.name = 'h4'
@@ -101,9 +107,27 @@ def parse_all(converter: MarkdownConverter, html_str: str):
     soup = preprocess(html_str)
         
     children = soup.find(True).find_all(recursive=False)
+    metadata_node = children[0]
+    title = metadata_node.find('h1').text
+    
+    author = metadata_node.select_one('.mui-ltrqv0')
+    difficulty = metadata_node.select_one('.mui-su24yt')
+    
+    
     
     with open('output.md', 'w') as f:
-        for child in children[:]:
+        
+        f.write(f'{title}\n')
+        f.write('=' * len(title))
+        if author or difficulty:
+            f.write('\n\n```')
+            if author:
+                f.write(f'\nAuthor: {author.text}')
+            if difficulty:
+                f.write(f'\nLevel : {difficulty.text.upper()}')
+            f.write('\n```\n\n')
+        
+        for child in children[1:]:
             print('-------------------')
             print(child)
             print(child.attrs.get('class'))

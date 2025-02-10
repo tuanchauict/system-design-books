@@ -1,26 +1,10 @@
+Design a Collaborative Document Editor like Google Docs
+=======================================================
 
-###### Common Problems
-
-Design a Code Judge Like LeetCode
-=================================
-
-[![Evan King](https://hellointerview-files.s3.us-west-2.amazonaws.com/public-media/evan-headshot.png)
-
-Evan King
-
-Ex-Meta Staff Engineer](https://www.linkedin.com/in/evan-king-40072280/)
-
-medium
-
-35 min
-
-[Practice this problem](/practice/system-design/start/leetcode)
-
----
-
-
-
-
+```
+Author: Stefan Mai
+Level : MEDIUM
+```
 
 
 
@@ -29,8 +13,14 @@ Understanding the Problem
 
 
 
-**🧑‍💻 What is [LeetCode](https://leetcode.com/)?**
-Let's be honest; LeetCode needs no introduction. You're probably spending many hours a day there right now as you prepare. But, for the uninitiated, LeetCode is a platform that helps software engineers prepare for coding interviews. It offers a vast collection of coding problems, ranging from easy to hard, and provides a platform for users to answer questions and get feedback on their solutions. They also run periodic coding competitions.
+
+> 
+> **📄 What is [Google Docs](https://docs.google.com)?**
+> Google Docs is a browser-based collaborative document editor. Users can create rich text documents and collaborate with others in real-time.
+
+
+
+In this writeup we'll design a system that supports the core functionality of Google Docs, dipping into websockets and collaborative editing systems. We'll start with the requirements (like a real interview), then move on to complete the design following our [Delivery Framework](/learn/system-design/in-a-hurry/delivery).
 
 
 ### [Functional Requirements](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#1-functional-requirements)
@@ -41,24 +31,20 @@ Let's be honest; LeetCode needs no introduction. You're probably spending many h
 
 
 
-1. Users should be able to view a list of coding problems.
-2. Users should be able to view a given problem, code a solution in multiple languages.
-3. Users should be able to submit their solution and get instant feedback.
-4. Users should be able to view a live leaderboard for competitions.
+1. Users should be able to create new documents.
+2. Multiple users should be able to edit the same document concurrently.
+3. Users should be able to view each other's changes in real-time.
+4. Users should be able to see the cursor position and presence of other users.
 
 
-**Below the line (out of scope):**
+**Below the line (out of scope)**
 
 
 
-* User authentication
-* User profiles
-* Payment processing
-* User analytics
-* Social features
+1. Sophisticated document structure. We'll assume a simple text editor.
+2. Permissions and collaboration levels (e.g. who has access to a document).
+3. Document history and versioning.
 
-
-For the sake of this problem (and most system design problems for what it's worth), we can assume that users are already authenticated and that we have their user ID stored in the session or JWT.
 
 
 ### [Non-Functional Requirements](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#2-non-functional-requirements)
@@ -67,558 +53,320 @@ For the sake of this problem (and most system design problems for what it's wort
 
 **Core Requirements**
 
+1. Documents should be eventually consistent (i.e. all users should eventually see the same document state).
+2. Updates should be low latency (< 100ms).
+3. The system should scale to millions of concurrent users across billions of documents.
+4. No more than 100 concurrent editors per document.
+5. Documents should be durable and available even if the server restarts.
 
-
-1. The system should prioritize availability over consistency.
-2. The system should support isolation and security when running user code.
-3. The system should return submission results within 5 seconds.
-4. The system should scale to support competitions with 100,000 users.
-
-
-**Below the line (out of scope):**
-
-
-
-* The system should be fault-tolerant.
-* The system should provide secure transactions for purchases.
-* The system should be well-tested and easy to deploy (CI/CD pipelines).
-* The system should have regular backups.
-
-
-It's important to note that LeetCode only has a few hundred thousand users and roughly 4,000 problems. Relative to most system design interviews, this is a small-scale system. Keep this in mind as it will have a significant impact on our design.
+> [!TIP]
+> Some non-functional requirements make your job *easier*! In this case, limiting the number of concurrent editors per document is a great constraint to have. It means we can avoid worrying massive throughput on a single document and instead focus on the core functionality.For what it's worth, this is a choice that Google docs also made - beyond a certain number of concurrent users, everyone new can only join as readers (implying a bit about their architectural choices).
 
 Here's how it might look on your whiteboard:
 
-![LeetCode Requirements](https://d248djf5mc6iku.cloudfront.net/excalidraw/c56b169c8d83dd57b2942d088d13ae8b)
 
 
-> [!CAUTION]
-> Adding features that are out of scope is a "nice to have". It shows product thinking and gives your interviewer a chance to help you reprioritize based on what they want to see in the interview. That said, it's very much a nice to have. If additional features are not coming to you quickly, don't waste your time and move on.
+Functional\* Users can create new documents\* Users can edit documents\* Users can get real-time updates\* Users can see each others' cursorsNon-Functional\* Documents are eventually consistent\* Updates are low latency (100ms)\* Millions of users, billions of documents\* No more than 100 concurrent editors\* Durable documents
 
-
-
-
-
-The Set Up
-----------
-
-
-
+Set Up
+------
 
 ### Planning the Approach
 
-
-
-Before you move on to designing the system, it's important to start by taking a moment to plan your strategy. Fortunately, for these common user-facing product-style questions, the plan should be straightforward: build your design up sequentially, going one by one through your functional requirements. This will help you stay focused and ensure you don't get lost in the weeds as you go. Once you've satisfied the functional requirements, you'll rely on your non-functional requirements to guide you through the deep dives.
-
-
+Before we start designing the system, we need to think briefly through the approach we'll take.For this problem, we'll start by designing a system which simply supports our functional requirements without much concern for scale or our non-functional requirements. Then, in our deep-dives, we'll bring back those concerns one by one.To do this we'll start by enumerating the "nouns" of our system, build out an API, and then start drawing our boxes.
 ### [Defining the Core Entities](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#core-entities-2-minutes)
 
-
-
-I like to begin with a broad overview of the primary entities. At this stage, it is not necessary to know every specific column or detail. We will focus on the intricacies, such as columns and fields, later when we have a clearer grasp. Initially, establishing these key entities will guide our thought process and lay a solid foundation as we progress towards defining the API.
-
-To satisfy our key functional requirements, we'll need the following entities:
+First we'll define some core entities. These help to define terms between you and the interviewer, understand the data central to your design, and gives us a clue as to our APIs and how the system will fit together. The easiest way to do this is to look over your functional requirements and think about what nouns are involved in satisfying them. Asking yourself deeper questions about the behavior of the system ("what happens when...") will help you uncover the entities that are important to your design.For this problem, we'll need just a few entities on our whiteboard:
 
 
 
-1. **Problem**: This entity will store the problem statement, test cases, and the expected output.
-2. **Submission**: This entity will store the user's code submission and the result of running the code against the test cases.
-3. **Leaderboard**: This entity will store the leaderboard for competitions.
+EditorDocumentEditCursorWe'll explain these to our interviewer as we go through the problem.
 
+* **Editor**: A user editing a document.
+* **Document**: A collection of text managed by an editor.
+* **Edit**: A change made to the document by an editor.
+* **Cursor**: The position of the editor's cursor in the document (and the presence of that user in a document).
 
-In the actual interview, this can be as simple as a short list like this. Just make sure you talk through the entities with your interviewer to ensure you are on the same page. You can add `User` here too; many candidates do, but in general, I find this implied and not necessary to call out.
+### Defining the API
 
-![Leetcode Entities](https://d248djf5mc6iku.cloudfront.net/excalidraw/29a7b1e81c3909ab4334f3a9197768ed)
-
-
-> [!TIP]
-> As you move onto the design, your objective is simple: create a system that meets all functional and non-functional requirements. To do this, I recommend you start by satisfying the functional requirements and then layer in the non-functional requirements afterward. This will help you stay focused and ensure you don't get lost in the weeds as you go.
-
-
-
-
-### [API or System Interface](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#api-or-system-interface-5-minutes)
-
-
-
-When defining the API, we can usually just go one-by-one through our functional requirements and make sure that we have (at least) one endpoint to satisfy each requirement. This is a good way to ensure that we're not missing anything.
-
-Starting with viewing a list of problems, we'll have a simple GET endpoint that returns a list. I've added some basic pagination as well since we have far more problems than should be returned in a single request or rendered on a single page.
-
-
+Next, we can move to the APIs we need to satisfy which will very closely track our functional requirements. For this problem, we probably want some REST APIs to manage the document itself. We also know we're going to need lots of bi-directional communication between each editor and the document they're collectively editing. In this case it makes sense to assume we'll need some sort of websocket-based approach for the editor experience, so we'll define a few of the messages that we'll send over the wire.Each interviewer may put more of less emphasis on this step. Some interviewers may want to really understand the intricacies of the messages (veering into a low-level design question) while others may be happy to know that you have a few messages defined opaquely and can move on. We'll assume the latter here!
 ```
-GET /problems?page=1&limit=100 -> Partial<Problem>[]
-```
-
-
-
-> [!NOTE]
-> The `Partial` here is taken from TypeScript and indicates that we're only returning a subset of the `Problem` entity. In reality, we only need the problem title, id, level, and maybe a tags or category field but no need to return the entire problem statement or code stubs here. How you short hand this is not important so long as you are clear with your interviewer.
-
-
-
-Next, we'll need an endpoint to view a specific problem. This will be another GET endpoint that takes a problem ID (which we got when a user clicked on a problem from the problem list) and returns the full problem statement and code stub.
-
-
-```
-GET /problems/:id?language={language} -> Problem
-```
-
-
-We've added a query parameter for language which can default to any language, say `python` if not provided. This will allow us to return the code stub in the user's preferred language.
-
-Then, we'll need an endpoint to submit a solution to a problem. This will be a POST endpoint that takes a problem ID and the user's code submission and returns the result of running the code against the test cases.
-
-
-```
-POST /problems/:id/submit -> Submission
+POST /docs
 {
-  code: string,
-  language: string
+  title: string
+} -> {
+  docId
 }
 
-- userId not passed into the API, we can assume the user is authenticated and the userId is stored in the session
+WS /docs/{docId}
+  SEND {
+    type: "insert"
+    ....
+  }
+
+  SEND {
+    type: "updateCursor"
+    position: ...
+  }
+
+  SEND { 
+    type: "delete"
+    ...
+  }
+
+  RECV { 
+    type: "update"
+    ...
+  }
 ```
-
-
-Finally, we'll need an endpoint to view a live leaderboard for competitions. This will be a GET endpoint that returns the ranked list of users based on their performance in the competition.
-
-
-```
-GET /leaderboard/:competitionId?page=1&limit=100 -> Leaderboard
-```
-
-
-
-> [!TIP]
-> Always consider the security implications of your API. I regularly see candidates passing in data like `userId` or `timestamps` in the body or query parameters. This is a red flag as it shows a lack of understanding of security best practices. Remember that you can't trust any data sent from the client as it can be easily manipulated. User data should always be passed in the session or JWT, while timestamps should be generated by the server.
-
-
-
-
+> [!NOTE]
+> When your API involves websockets, you'll be talking about *messages* you send over the websocket vs endpoints you hit with HTTP. The notation is completely up to you, but having some way to describe the protocol or message schema is helpful to convey what is going over the wire.
 
 [High-Level Design](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#high-level-design-10-15-minutes)
 ---------------------------------------------------------------------------------------------------------------------------
 
-
-
-With our core entities and API defined, we can now move on to the high-level design. This is where we'll start to think about how our system will be structured and how the different components will interact with each other. Again, we can go one-by-one through our functional requirements and make sure that we have a set of components or services to satisfy each API endpoint. During the interview it's important to orient around each API endpoint, being explicit about how data flows through the system and where state is stored/updated.
-
-
+With a sketch of an API we'll move to our high-level design. Tactically, it can be helpful to tell your interviewer that you're sure there are more details of the API to work through but you'll come back to those later as you flesh out the problem.
 > [!TIP]
-> The majority of systems designed in interviews are best served with a microservices architecture, as has been the case with the other problem breakdowns in this guide. However, this isn't always the case. For smaller systems like this one, a monolithic architecture might be more appropriate. This is because the system is small enough that it can be easily managed as a single codebase and the overhead of managing multiple services isn't worth it. With that said, let's go with a simple client-server architecture for this system.
+> While it's *awesome* to be able to polish a perfect answer, you're in a time crunch! Acknowledging issues that you might get to later and leaving space to adjust your design as you learn more is a great way to keep the interview moving productively.
+
+### 1) Users should be able to create new documents.
+
+Our first step in our document editor is to allow users to create new documents. This is a simple API that takes a title and returns a document ID. There's a lot of interesting metadata that we may want to hang off of the document (e.g. permissions, history, tags, etc.) so it's sensible for us to assume there will be some separation of the document itself and the metadata. For this API, we'll tackle the first part.From an interviewing perspective the pattern we're using here of a simple horizontally scaled CRUD service fronted by an API gateway is so common you should be able to sling them out really quickly! Don't spend too much time setting the stage.
 
 
 
+UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id titleOur interviewer is likely to ask us what database we're going to use here. For this problem, let's assume a simple Postgres database for now because it gives us flexible querying and, if we need to scale, we can always partition and replicate later.
+### 2) Multiple users should be able to edit the same document concurrently.
 
-### 1) Users should be able to view a list of coding problems
+For our next requirement, we'll have to deal with writing to the document itself which has both consistency and scaling problems. This is where things start to get interesting. In a collaborative editor multiple users are making high frequency edits to the same document at the same time — a recipe for consistency problems and contention!We're going to defer the scaling concerns for our deep dive later in the interview, so we'll make a note to our interviewer that we'll come back to that so we can focus on consistency.
+#### Collaborative Edits Breakdown
 
+First, let me explain why achieving consistency in a collaborative editor is not easy by starting with a deficient solution and then building up to a more correct one.
+> [!NOTE]
+> I'm going to walk through the fundamentals here to explain how we can solve the consistency problems here but, like before, this is a place where it's good to have the background knowledge to be able to field questions from your interviewer but you probably won't use the interview time to teach these concepts to your interviewer. Skip ahead if you already understand them!
 
+##### Sending Snapshots (Wrong)
 
-To view a list of problems, we'll need a simple server that can fetch a list of problems from the database and return them to the user. This server will also be responsible for handling pagination.
-
-![Viewing a List of Problems](https://d248djf5mc6iku.cloudfront.net/excalidraw/29171b8ddaadf17b6846a6913a8a2760)
-
-The core components here are:
-
-
-
-1. **API Server**: This server will handle incoming requests from the client and return the appropriate data. So far it only has a single endpoint, but we'll add the others as we go.
-2. **Database**: This is where we'll store all of our problems. We'll need to make sure that the database is indexed properly to support pagination. While either a SQL or NoSQL database could work here, I'm going to choose a NoSQL DB like DynamoDB because we don't need complex queries and I plan to nest the test cases as a subdocument in the problem entity.
+Let's pretend on each edit the users send their entire document over to a `Document Service`. The `Document Service` will then store the document in a blob storage system like S3.
 
 
-Our `Problem` schema would look something like this:
 
+UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id titleDocument ServiceWebsocketBlob Store (S3)Write Entire DocumentSimple enough, right? Not so fast. First, this design is incredibly inefficient: we're transferring the entire document over the wire for every edit. For a fast typer, this could mean 100s of KBs per keystroke, yuck. But a more serious problem looms.Assume User A and User B are editing the same document concurrently. The document starts with a single paragraph of text:
+```
+Hello!
 
 ```
-{
-  id: string,
-  title: string,
-  question: string,
-  level: string,
-  tags: string[],
-  codeStubs: {
-    python: string,
-    javascript: string,
-    typescript: string,
-    ...
-  },
-  testCases: {
-    type: string,
-    input: string,
-    output: string
-  }[]
-}
-```
 
+* User A adds ", world" to produce `Hello, world!` which they submit.
+* User B deletes the "!" to produce `Hello` which they submit.
 
-The `codeStubs` for each language would either need to be manually entered by an admin or, in the modern day of LLMs, could be generated automatically given a single language example.
+Both submit their edits at the same time. The actual document that gets stored to our blob storage is entirely dependent on which request arrives first. If User A's edit arrives first, the document will be `Hello, world!` If User B's edit arrives first, the document will be `Hello`. The user experience is terrible, we're losing all concurrent edits!
+##### Sending Edits (Getting Warmer)
 
+We can take a crack at solving these problems by recognizing that we're making **edits** to the document. Instead of transmitting the entire document over the wire, we can transmit just the edits themselves.
 
-### 2) Users should be able to view a given problem and code a solution
+* User A adds ", world" and sends `INSERT(5, ", world")`
+* User B deletes the "!" and sends `DELETE(6)`
 
+We solved our first problem! We're no longer transmitting the entire document over the wire, so now we don't need to send 100s of KB on every keystroke. But we have a new problem.User B's deletion assumes that the character at position 6 is an exclamation mark. If User A's edit arrives after User B's deletion, we'll end up with `Hello, world` - ok, good. But if User B's edit arrives after User A's edit, we'll end up with `Hello world!` - we deleted the comma instead of the exclamation mark!
+##### Collaborative Editing Approaches
 
-
-To view a problem, the client will make a request to the API server with `GET /problems/:id` and the server will return the full problem statement and code stub after fetching it from the database. We'll use a [Monaco Editor](https://microsoft.github.io/monaco-editor/) to allow users to code their solution in the browser.
-
-![Viewing a Specific Problem](https://d248djf5mc6iku.cloudfront.net/excalidraw/0ad60cb404977f7e68c9ffc220e32c5d)
-
-
-### 3) Users should be able to submit their solution and get instant feedback
-
-
-
-Ok, it's been easy so far, but here is where things get interesting. When a user submits their solution, we need to run their code against the test cases and return the result. This is where we need to be careful about how we run the code to ensure that it doesn't crash our server or compromise our system.
-
-Let's breakdown some options for code execution:
-
-
-> [!WARNING]
-> #### Bad Solution: Run Code in the API Server
+The critical missing piece here is that each edit is contextual: it's an edit based on a specific state of the document. Dealing with a stream of edits presents a bunch of consistency problems! We have two options to solve this problem:
+> [!IMPORTANT]
+> #### Good Solution: Operational Transformation (OT)
 > 
 > ###### Approach
 > 
-> The simplest way to run the user submitted code is to run it directly in the API server. This means saving the code to a file in our local filesystem, running it, and capturing the output. This is a terrible idea, don't do it!
+> One way to thread the needle is to reinterpret or *transform* each edit before it's applied. The idea here is that each user's edit can be adjusted based on the edits that came before it.We'll collect all of the edits to the document on a single server. From there, we can, in batches, transform each edit based on the edits that came before it. While an exhaustive treatment of OT is beyond the scope of this design (you can read more [on the wikipedia page](https://en.wikipedia.org/wiki/Operational_transformation)), let's consider a simple worked example.User B's `DELETE(6)` is trying to delete the character at position 6, which for them was a `!` at the time the edit was created. The problem occurs when User A's edit `INSERT(5, ", world")` arrives first. If we don't transform User B's edit, we'll end up with `Hello, world` instead of `Hello, world!`.The OT approach is to transform the operations before they're applied (and, later, before they're sent back to the client). In this case, if User A's edit arrives before User B's deletion, we can transform User B's `DELETE(6)` to `DELETE(12)` so that when User A's edit is applied, it deletes the exclamation mark instead of the comma.OT is low memory and fast, but comes with a big tradeoff.
 > ###### Challenges
 > 
-> 1. **Security**: Running user code on your server is a massive security risk. If a user submits malicious code, they could potentially take down your server or compromise your system. Consider a user submitting code that deletes all of your data or sends all of your data to a third party. They could also use your server to mine cryptocurrency, launch DDoS attacks, or any number of other malicious activities.
-> 2. **Performance**: Running code is CPU intensive and can easily crash your server if not properly managed, especially if the code is in an infinite loop or has a memory leak.
-> 3. **Isolation**: Running code in the same process as your API server means that if the code crashes, it will take down your server with it and no other requests will be able to be processed.
+> OT requires a central server which can provide a final ordering of operations. This allows us to scale to a small number of collaborators, but not an enormous number. Our non-functional requirements help us here. OT is also tricky to implement correctly and easy to get wrong.
+> 
+> 
+> 
+> INSERT(5, ", world")DELETE(6)Initial Text:Hello!Hello world!DELETE(6)INSERT(5, ", world")Hello, worldWithout OTWith OTINSERT(5, ", world")-> DELETE(12)DELETE(6)-> INSERT(5, ", world")Hello, worldHello, world
 
 > [!IMPORTANT]
-> #### Good Solution: Run Code in a Virtual Machine (VM)
+> #### Good Solution: Conflict-free Replicated Data Types (CRDTs)
 > 
-> ###### Approach
+> ##### Approach
 > 
-> A better way to run user submitted code is to run it in a [virtual machine (VM)](https://cloud.google.com/learn/what-is-a-virtual-machine#:~:text=A%20virtual%20machine%20(VM)%20is,as%20updates%20and%20system%20monitoring.) on the physical API Server. A VM is an isolated environment that runs on top of your server and can be easily reset if something goes wrong. This means that even if the user's code crashes the VM, it won't affect your server or other users.
+> The alternative to reinterpreting every edit is to make every edit commutative or, able to be applied in any order. This is the approach taken by Conflict-free Replicated Data Types (CRDTs).CRDTs allow us to represent edits as a set of operations that can be applied in any order but still produce the exact same output.For simple text operations, CRDTs do this with two tricks:
+> 
+> 1. CRDTs represent positions using real numbers rather than integers. These positions *never change* even in light of insertions. If we need to create more "space", real numbers allow us to do so infinitely (like adding 1.5 between 1 and 2).
+> 2. CRDTs keep "tombstones" for deleted text. The text is never actually removed from the document, but we remember that it is deleted before displaying the document to the user.
+> 
+> Note: We won't be able to go into too much depth to explain CRDTs (a deep research topic!) though you're free to read more on [the wikipedia page](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type). But to give you some intuition, let's consider a simple worked example.Assume we have two users looking at "Hello!" where each character has a position number under it:
+> ```
+> H  e  l  l  o  !
+> 
+> ```
+> ```
+> 0  1  2  3  4  5
+> 
+> ```
+> Both users want to insert something after "Hello". User A wants to insert "," and User B wants to insert " there". This would be tricky in OT because we'd need to transform one edit based on the other. But with CRDTs, we just need to make sure each new character gets its own unique position number between 4 and 5.When User A's wants to insert "," she picks an arbitrary number between 4 and 5 as the position for her comma, in this case she chooses 4.6:
+> ```
+> H    e    l    l    o    ,    !
+> 
+> ```
+> ```
+> 0    1    2    3    4    4.3    5
+> 
+> ```
+> User B does the same, assigning arbitrary numbers between 4 and 5 for each of the characters he wants to insert:
+> ```
+> H     e     l     l     o         t     h     e     r     e    !
+> 
+> ```
+> ```
+> 0     1     2     3     4    4.1  4.2   4.4   4.5   4.7   4.8  5
+> 
+> ```
+> The magic is that these position numbers create a total ordering - no matter what order the edits arrive in, every client will sort the characters the same way and see the same final text.In this case, the resulting string is "Hello t,here!" which is a consequence of both users editing in the same position. There are a lot of tricks to prevent conflicts like this, but the core guarantee of a CRDT is that no matter what order the edits arrive in, every client will converge on the same document.CRDTs are elegant in that they remove the need for a central server. As long as all updates eventually reach all clients, the clients will converge on the same document. This makes it a good solution for peer-to-peer applications. CRDTs are also more easily adaptable to offline use-cases - you can just keep all of the edits in local storage and add them to the bag of updates once the editor comes back online.A great commercial implementation of CRDTs is [Yjs](https://github.com/yjs/yjs) which I would highly recommend for lightweight collaborative applications.
 > ###### Challenges
 > 
-> The main challenge with this approach is that VMs are resource intensive and can be slow to start up. This means that you'll need to carefully manage your VMs to ensure that you're not wasting resources and that you can quickly spin up new VMs as needed. Additionally, you'll need to be careful about how you manage the lifecycle of your VMs to ensure that you're not running out of resources or leaving VMs running when they're not needed which can prove costly.![Running User Code in a VM](https://d248djf5mc6iku.cloudfront.net/excalidraw/6e0bf4ac0c46e0b34d97d4265e210b3d)
+> The benefits of CRDTs come with some big downsides. The memory usage is higher because we need to remember every edit, including tombstones for text that has long been deleted. This means our document only grows in size, never shrinks. CRDTs are also less efficient computationally, though there are workarounds! And finally the handling of conflicts can be inelegant. For most real-time use cases this isn't as much a problem, simply having a cursor indicator is enough for you and I to avoid editing the same part of the same document, but as clients need to buffer or go offline it can become a major issue.
 
-> [!IMPORTANT]
-> #### Great Solution: Run Code in a Container (Docker)
-> 
-> ###### Approach
-> 
-> A great (and arguably optimal) solution is to run user submitted code in a [container](https://www.docker.com/resources/what-container). Containers are similar to VMs in that they provide an isolated environment for running code, but they are much more lightweight and faster to start up. Let's break down the key differences between VMs and containers:**VMs:** VMs run on physical hardware through a hypervisor (like VMware or Hyper-V). Each VM includes a full copy of an operating system (OS), the application, necessary binaries, and libraries, making them larger in size and slower to start. VMs are fully isolated, running an entire OS stack, which adds overhead but provides strong isolation and security.**Containers:** Containers, on the other hand, share the host system's kernel and isolate the application processes from each other. They include the application and its dependencies (libraries, binaries) but not a full OS, making them lightweight and enabling faster start times. Containers offer less isolation than VMs but are more efficient in terms of resource usage and scalability.We would create a container for each runtime that we support (e.g. Python, JavaScript, Java) that installs the necessary dependencies and runs the code in a sandboxed environment. Rather than spinning up a new VM for each user submission, we can reuse the same containers for multiple submissions, reducing resource usage and improving performance.
-> ###### Challenges
-> 
-> Given that containers share the host OS kernel, we need to properly configure and secure the containers to prevent users from breaking out of the container and accessing the host system. We also need to enforce resource limits to prevent any single submission from utilizing excessive system resources and affecting other users. More about these optimizations in the deep dive below.![Run Code in Containers](https://d248djf5mc6iku.cloudfront.net/excalidraw/f6d9fb31fbce646b872d6b8cdfa28e59)
-
-> [!IMPORTANT]
-> #### Great Solution: Run Code in a Serverless Function
-> 
-> ###### Approach
-> 
-> Another great option is to run user submitted code in a [serverless function](https://aws.amazon.com/serverless/). Serverless functions are small, stateless, event-driven functions that run in response to triggers (e.g. an HTTP request). They are managed by a cloud provider and automatically scale up or down based on demand, making them a great option for running code that is CPU intensive or unpredictable in terms of load.In this approach, we would create a serverless function for each runtime that we support (e.g. Python, JavaScript, Java) that installs the necessary dependencies and runs the code in a sandboxed environment. When a user submits their code, we would trigger the appropriate serverless function to run the code and return the result.
-> ###### Challenges
-> 
-> The main challenge with this approach is that serverless functions have a cold start time, which can introduce latency for the first request to a function. Additionally, serverless functions have resource limits that can impact the performance of long running or resource intensive code. We would need to carefully manage these limits to ensure that we're not running out of resources or hitting performance bottlenecks.
+For this problem, we're going to use the Operational Transformation (OT) approach. This is the approach that Google Docs takes and it benefits from requiring low memory, being more adaptable to text in particular, and making use of a centralized server.If we needed to support a larger number of collaborators, or a Peer-to-Peer system (maybe using WebRTC!), we could use CRDTs. There are plenty of examples of industrial CRDTs which cut some corners (Figma being a notable one) - there's a healthy amount of research and development happening on both approaches.With that in mind, we can update our design to solve the collaborative edit problem. Our updated design sends edits to a central server as operations, which are transformed by the server before being recorded in a database.
 
 
 
-While Serverless (lambda) functions are a great option, I am going to proceed with the container approach given I don't anticipate a significant variance in submission volume and I'd like to avoid any cold start latency. So with our decision made, let's update our high-level design to include a container service that will run the user's code and break down the flow of data through the system.
+UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id titleDocument ServiceWebsocketDocument OperationsDBWrite Just EditsTransform OpsOperations timestamp documentId dataFor our new `Document Operations DB`, we want to use something that we can write very quickly in an append-only fashion (for now). Cassandra should do the trick. We'll partition by `documentId` and order by timestamp (which will be set by our document service). Once the edit has been successfully recorded in the database, we can acknowledge/confirm it to the user. We satisfied our durability requirement!
+### 3) Users should be able to view each other's changes in real-time.
 
-![Running User Code in a Container](https://d248djf5mc6iku.cloudfront.net/excalidraw/d2a92823af7c20003fbc959dad564abb)
+Ok, now that we have a write path let's talk about the most important remaining component: reads! We need to handle two paths:
 
-When a user makes a submission, our system will:
+* First, when a document is just created or hasn't been viewed in a while, we need to be able to load the document from our database and transfer it to the connected editors.
+* Next, when another editor makes an edit, we need to get notified so that our document stays up-to-date.
 
+#### When the Document is Loaded
 
-
-1. The API Server will recieve the user's code submission and problem ID and send it to the appropriate container for the language specified.
-2. The isolated container runs the user's code in a sandboxed environment and returns the result to the API server.
-3. The API Server will then store the submission results in the database and return the results to the client.
-
-
-
-### 4) Users should be able to view a live leaderboard for competitions
+When a user first connects, they need to get the latest version of the document. In this case when the Websocket connection is initially established for the document we can push to the connection all of the previous operations that have been applied. Since everyone is connecting to the same server, this allows us to assume that all connections are starting from the same place.
 
 
 
-First, we should define a competition. We will define them as:
+UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id titleDocument ServiceWebsocketDocument OperationsDBWrite Just EditsTransform OpsApplied OpsOn InitializationRead all OpsSend all Applied Ops on ConnectOperations timestamp documentId data
+#### When Updates Happen
 
-
-
-* 90 minutes long
-* 10 problems
-* Up to 100k users
-* Scoring is the number of problems solved in the 90 minutes. In case of tie, we'll rank by the time it took to complete all 10 problems (starting from competition start time).
-
-
-The easiest thing we can do when users request the leaderboard via `/leaderboard/:competitionId` is to query the submission table for all items/rows with the `competitionId` and then group by `userId`, ordering by the number of successful submissions.
-
-In a SQL database, this would be a query like:
-
+When an edit is made successfully by another collaborator, every remaining connected editor needs to receive the updates. Since all of our editors are connected to the same server, this is straightforward: after we record the operation to our database, we can also send it to all clients who are currently connected to the same document.The next step might surprise you: On the client, we **also** have to perform the operational transformation. Let's talk briefly about why this is.When users make edits to their own document, they expect to see the changes *immediately*. In some sense, their changes are always applied first to their local document and then shipped off to the server. What happens if another user lands an edit on the server *after* we've applied our local change but *before* it can be recorded to the sever?Our OT gives us a way of handling out of order edits. Remember that OT takes a sequence of edits in an arbitrary order and rewrites them so they consistently return the same final document. We can do the same thing here!So so if User A submits `Ea` to the server, and User B submits `Eb` (which arrives after `Ea`), the perceived order of operations from each site is:
+```
+Server: Ea, Eb
+User A: Ea, Eb
+User B: Eb, Ea
 
 ```
-SELECT userId, COUNT(*) as numSuccessfulSubmissions
-FROM submissions
-WHERE competitionId = :competitionId AND passed = true
-GROUP BY userId
-ORDER BY numSuccessfulSubmissions DESC
-```
-
-
-In a NoSQL DB like DynamoDB, you'd need to have the partition key be the `competitionId`. Then you'd pull all items into memory and group and sort.
-
-Once we have the leaderboard, we'll pass it back to the client to display. In order to make sure it's fresh, the client will need to request the leaderboard again after every ~5 seconds or so.
-
-![Leaderboard](https://d248djf5mc6iku.cloudfront.net/excalidraw/be20083205ad60304463a8a48a553315)
-
-Tying it all together:
+Regardless of the ordering, by applying OT to the operations we can guarantee that each user sees the same document!
 
 
 
-1. User requests the leaderboard via `/leaderboard/:competitionId`
-2. The API server initiates a query to the submission table in our database to get all successful submissions for the competition.
-3. Whether via the query itself, or in memory, we'll create the leaderboard by ranking users by the number of successful submissions.
-4. Return the leaderboard to the client.
-5. The client will request the leaderboard again after 5 seconds so ensure it is up to date.
+UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id titleDocument ServiceWebsocketDocument OperationsDBWrite Just EditsTransform OpsApplied OpsOn InitializationRead all OpsSend all Applied Ops on ConnectReceive All EditsTransform Received OpsOperations timestamp documentId data
+### 4) Users should be able to see the cursor position and presence of other users.
 
-
-
-> [!CAUTION]
-> Astute readers will realize this solution isn't very good as it will put a significant load on the database. We'll optimize this in a deep dive.
-
-
-
-
+One of the more important features of a collaborative editor is "awareness" or being able to see where your collaborators are editing. This helps to avoid situations where you're simultaneously editing the same content (always a mess!) or repeating work. Awareness is inherently transient, we only really care about where our collaborators' cursor is **now** not where it was an hour ago. We also don't care about where the user's cursor is when they aren't currenty connected - it doesn't make sense. This data is **ephemeral** with the connection.These properties help us to decide that we don't need to keep cursor position or the presence of other users in the document data itself. Instead, we can have users report changes to their cursor position to the `Document Service` which can store it in memory and broadcast it to all other users via the same websocket. When a new user connects, the `Document Service` can read the properties of other users out of memory and send them to the connecting user. Finally, the `Document Service` can keep track of socket hangups/disconnects and remove those users from the list (sending a broadcast when it happens to any remaining users).And with that, we have a functional collaborative editor which scales to a few thousand users!
 
 [Potential Deep Dives](https://www.hellointerview.com/learn/system-design/in-a-hurry/delivery#deep-dives-10-minutes)
 --------------------------------------------------------------------------------------------------------------------
 
+With the core functional requirements met, it's time to cover non-functional requirements and issues we introduced.
+### 1) How do we scale to millions of websocket connections?
 
-
-With the core functional requirements met, it's time to delve into the non-functional requirements through deep dives. Here are the key areas I like to cover for this question.
-
-
-> [!TIP]
-> The extent to which a candidate should proactively lead the deep dives is determined by their seniority. For instance, in a mid-level interview, it is entirely reasonable for the interviewer to lead most of the deep dives. However, in senior and staff+ interviews, the expected level of initiative and responsibility from the candidate rises. They ought to proactively anticipate challenges and identify potential issues with their design, while suggesting solutions to resolve them.
+One of the weakest assumptions we made as we built out the system is that we'll be able to serve everyone from a single `Document Service` server. This won't scale to millions of concurrent users and introduces a single point of failure for availability.Wwe need to scale the number of `Document Service` servers to the number of concurrent connections. When I connect to the `Document Service`, I either (a) need to be co-located with all other users connected to the same document or (b) know where all the other users are connected. (See [Whatsapp](/learn/system-design/problem-breakdowns/whatsapp#1-how-can-we-handle-billons-of-simultaneous-users) for a similar problem.)
 
 
 
+User AUser BUser CServer 1Server 2I need to send message to User C,which server do I connect to?Websocket ConnectionsWhen you introduce websockets into your design, you're probably doing it because they are *bi-directional*, you can send messages back to your clients. With a traditional client-server architecture you're mostly talking about left-to-right arrows: how can clients connect to the servers to send messages and receive a response. The jump that many candidates fail to make is to think about the **right-to-left** arrows on their diagrams: how do your internal services talk to the clients?Because the statefulness of websockets is a pain, it can be useful to handle them at the "edge" of your design. By terminating websockets early and exposing an "internal" API to the rest of our system, other systems can retain statelessness and don't need to concern themselves with the details of websocket connections.The solution here is to horizontally scale the `Document Service` and use a consistent hash ring to distribute connections across servers. Each server in our system joins a the hash ring, with each server responsible for a range of hash values. This means we always know both which server is responsible for the document and all connections go there. We use Apache Zookeeper to maintain the hash ring configuration and coordinate between servers.When a client needs to connect:
 
-### 1) How will the system support isolation and security when running user code?
+1. They can initially open an HTTP connection to any of the document servers (potentially via round robin) with the document ID requested.
+2. That server will check the hash ring configuration for the given document ID and if it's not responsible for that hash range, it will respond with a redirect to the correct server's address. This way, clients eventually connect directly to the right server without an intermediary.
+3. Once the correct server is found, the HTTP connection is upgraded to a websocket connection. The socket server maintains a map from the document ID to the corresponding websocket for use later.
+4. We load all the stored ops (if they aren't already loaded) from our `Document Operations DB` and are ready to process operations.
 
-
-
-By running our code in an isolated container, we've already taken a big step towards ensuring security and isolation. But there are a few things we'll want to include in our container setup to further enhance security:
-
-
-
-1. **Read Only Filesystem**: To prevent users from writing to the filesystem, we can mount the code directory as read-only and write any output to a temporary directory that is deleted a short time after completion.
-2. **CPU and Memory Bounds**: To prevent users from consuming excessive resources, we can set CPU and memory limits on the container. If these limits are exceeded, the container will be killed, preventing resource exhaustion.
-3. **Explicit Timeout**: To prevent users from running infinite loops, we can wrap the user's code in a timeout that kills the process if it runs for longer than a predefined time limit, say 5 seconds. This will also help us meet our requirement of returning submission results within 5 seconds.
-4. **Limit Network Access**: To prevent users from making network requests, we can disable network access in the container, ensuring that users can't make any external calls. If working within the AWS ecosystem, we can use [Virtual Private Cloud (VPC)](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html) Security Groups and NACLs to restrict all outbound and inbound traffic except for predefined, essential connections.
-5. **No System Calls (Seccomp)**: We don't want users to be able to make system calls that could compromise the host system. We can use [seccomp](https://docs.docker.com/engine/security/seccomp/) to restrict the system calls that the container can make.
+Since all of the users of a document are connecting to the same server, when updates happen we can simply pass them to all connected clients.The beauty of consistent hashing is that when we add or remove servers, only a small portion of connections need to be redistributed. Servers periodically check Zookeeper for ring changes and can initiate connection transfers when needed.
 
 
 
-> [!NOTE]
-> Note that in an interview you're likely not expected to go into a ton of detail on how you'd implement each of these security measures. Instead, focus on the high-level concepts and how they would help to secure the system. If your interviewer is interested in a particular area, they'll ask you to dive deeper. To be concrete, this means just saying, "We'd use docker containers while limiting network access, setting CPU and memory bounds, and enforcing a timeout on the code execution" is likely sufficient.
+UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id titleDocument ServiceWebsocketDocument OperationsDBWrite/ReceiveEdits, Cursor ChangesTransform OpsApplied OpsOn InitializationRead all OpsSend all Applied Ops on ConnectTransform Received OpsZookeeperQuery Hash RangesOperations timestamp documentId dataThe downside of this approach is that in these scaling events we need to move a lot of state. Not only do we need to move websocket connections for displaced users (by disconnecting them and forcing them to reconnect to the right server), but we also need to ensure document operations are moved to the correct server.In an interview, we may be asked to expand on this further:**Scaling complexity**
 
+* Need to track both old and new hash rings when adding servers
+* Requests may need to be sent to multiple servers during transitions
+* Server failures require quick redistribution of connections and hash ring updates
 
+**Connection state management challenges**
 
-![Security](https://d248djf5mc6iku.cloudfront.net/excalidraw/bc19de62355e0e050f691f3bc2a784b8)
+* Need robust monitoring for server failures and connection issues
+* Must implement client-side reconnection logic for server unavailability
 
+**Capacity planning requirements**
 
-### 2) How would you make fetching the leaderboard more efficient?
+* Must ensure servers have sufficient resources for their connection load
+* Need to monitor connection distribution to prevent server hotspots
 
+### 2) How do we keep storage under control?
 
-
-As we mentioned during our high-level design, our current approach is not going to cut it for fetching the leaderboard, it's far too inefficient. Let's take a look at some other options:
-
-
-> [!WARNING]
-> #### Bad Solution: Polling with Database Queries
+With billions of documents, we need to be thoughtful about how we manage storage. By choosing OT vs CRDTs, we can already reduce the amount of storage we need by a factor. Still, if each document is 50kb, we're looking at 50TB of storage! Worse, if we have a document with millions of operations, each of these operations will need to be transferred and applied to each client that joins the document!Remember also that all *active* documents need to be held in memory in our `Document Service`. We need to keep that space small in order to avoid being memory bottlenecked.One of the most natural solutions here is we'll want to periodically snapshot/compact operations. The idea here is that we don't need all of the operations in our `Document Operations DB` to be stored (exception being if we want to manage some sort of versionining), and we can collapse many operations into one to save on both processing and space.Lots of options to pull this off!
+> [!IMPORTANT]
+> #### Good Solution: Offline Snapshot/Compact
 > 
-> ###### Approach
+> ##### Approach
 > 
-> This is what we have now in the high-level design. We store all submission results in the main database. Clients poll the server every few seconds, and on each poll, the server queries the database for the top N users, sorts them, and returns the result. We'd then keep the data fresh by having the client poll every 5 seconds. While this works better if we switched to a relational database, it still has signifcant shortcomings.
-> ###### Challenges
+> One approach we can take is to introduce a new `Compaction Service` which periodically reads operations out of the `Document Operations DB` and writes a snapshot back to the DB collapsing those instructions. The exact schedule has lots of potential parameters: we may look for large documents, that haven't been recently compacted, and probably haven't been written recently.Because this necessarily changes the operations that follow, we need to make sure that what we're writing isn't impacting a live document. This is a tricky distributed transaction that we need to pull off and, because we're using Cassandra for the `Document Operations DB`, we only have row-level transactions to work with.To ensure document-level atomicity, we'll introduce a new `documentVersionId` to the `Document Metadata DB`. Before loading a document, we'll grab this `documentVersionId` out of the `Document Metadata DB` so we know which document operations to retrieve.Whenever we want to change operations, we can write new operations and the *flip* the `documentVersionId`. We'll make sure all *flips* go through the `Document Service` so we don't have (yet another) race condition.The `Compaction Service` can:
 > 
-> The main issues with this approach are the high database load due to frequent queries and increased latency as the number of users grows. It doesn't scale well for real-time updates, especially during competitions with many participants. As the system grows, this method would quickly become unsustainable, potentially leading to database overload and poor user experience.This approach would put an enormous strain on the database, potentially causing performance issues and increased latency. With each user poll triggering a query for a million records every 5 seconds, the database would struggle to keep up, especially during peak times or competitions. This frequent querying and sorting would also consume significant computational resources, making the system inefficient and potentially unstable under high load.
+> 1. Read the document operations out for a given document out of the DB.
+> 2. Compact these operations into as few operations as possible (probably a singular insert operation!).
+> 3. Write the resulting operations to a new `documentVersionId`.
+> 4. Tell the `Document Service` to *flip* the `documentVersionId`.
+> 
+> If the `Document Service` has a loaded document, it will discard the flip command to defer compaction which might corrupt existing operations.
+> 
+> 
+> 
+> UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id title documentVersionIdDocument ServiceWebsocketDocument OperationsDBWrite/ReceiveEdits, Cursor ChangesTransform OpsApplied OpsOn InitializationRead all OpsSend all Applied Ops on ConnectTransform Received OpsZookeeperQuery Hash RangesCompaction/CleanupServiceFlip DocumentVersionOperations timestamp documentVersionId metadata
+> ##### Challenges
 
 > [!IMPORTANT]
-> #### Good Solution: Caching with Periodic Updates
+> #### Great Solution: Online Snapshot/Compact Operations
 > 
-> ###### Approach
+> ##### Approach
 > 
-> To reduce the load on the database, we can introduce a cache (e.g., Redis) that stores the current leaderboard. The cache is updated periodically, say every 30 seconds, by querying the database. When clients poll the server, we return the cached leaderboard instead of querying the database each time.
-> ###### Challenges
+> A different approach we can take is to have our `Document Service` periodically snapshot/compact operations. Since the `Document Service` has exclusive ownership of a document when we're not scaling up the cluster, we can safely compact operations without worrying about coordination/consistency. In fact, a natural time to do this is when the document is idle and has no connections - something the document service will know about immediately. We also already have all of the existing document operations in memory at that time, making our job easier.When the last client disconnects we can then:
 > 
-> While this approach reduces database load, it still has some limitations. Updates aren't truly real-time, and there's still polling involved, which isn't ideal for live updates. There's also a potential for race conditions if the cache update frequency is too low. However, this method is a significant improvement over the previous approach and could work well for smaller-scale competitions.
-
-> [!IMPORTANT]
-> #### Great Solution: Redis Sorted Set with Periodic Polling
+> 1. Take all of the existing operations and offload them to a separate (low CPU nice) process for compaction.
+> 2. Write the resulting operations to the DB under a new documentVersionId.
+> 3. Flip the `documentVersionId` in the `Document Metadata DB`.
 > 
-> ###### Approach
 > 
-> This solution uses Redis sorted sets to maintain a real-time leaderboard while storing submission results in the main database. When a submission is processed, both the database and the Redis sorted set are updated. Clients poll the server every 5 seconds for leaderboard updates, and the server returns the top N users from the Redis sorted set which is wicked fast and requires no expensive database queries.Redis sorted sets are an in-memory data structure that allows us to efficiently store and retrieve data based on a score. This is perfect for our use case, as we can update the leaderboard by adding or removing users and their scores, and then retrieve the top N users with the highest scores.The Redis sorted set uses a key format like `competition:leaderboard:{competitionId}`, with the score being the user's total score or solve time, and the value being the userId. We'd implement an API endpoint like `GET /competitions/:competitionId/leaderboard?top=100`. When processing a submission, we'd update Redis with a command like `ZADD competition:leaderboard:{competitionId} {score} {userId}`. To retrieve the top N users, we'd use `ZREVRANGE competition:leaderboard:{competitionId} 0 N-1 WITHSCORES`.Then, when a user requests the leaderboard, we'll send them the first couple pages of results to display (maybe the top 1,000). Then, as they page via the client, we can fetch the next page of results from the server, updating the UI in the process.
-> ###### Benefits
 > 
-> This approach offers several advantages. It's simpler to implement compared to WebSockets while still providing near real-time updates. The 5-second delay is generally acceptable for most users. It significantly reduces load on the main database and scales well for our expected user base. Of course, we could lower the polling frequency if needed as well, but 5 seconds is likely more than good enough given the relative infrequency of leaderboard updates.
-
-
-
-![Redis Sorted Set with Periodic Polling](https://d248djf5mc6iku.cloudfront.net/excalidraw/a1783e5526947683d62600fd0bd1fbd0)
-
-
-> [!CAUTION]
-> Many candidates that I ask this question of propose a Websocket connection for realtime updates.While this isn't necessarily wrong, they would be overkill for our system given the modest number of users and the acceptable 5-second delay. The Redis Sorted Set with Periodic Polling solution strikes a good balance between real-time updates and system simplicity. It's more than adequate for our needs and can be easily scaled up if required in the future.If we find that the 5-second interval is too frequent, we can easily adjust it. We could even implement a progressive polling strategy where we poll more frequently (e.g., every 2 seconds) during the last few minutes of a competition and less frequently (e.g., every 10 seconds) at other times.Staff candidates in particular are effective at striking these balances. They articulate that they know what the more complex solution is, but they are clear about why it's likely overkill for the given system.
-
-
-
-
-### 3) How would the system scale to support competitions with 100,000 users?
-
-
-
-The main concern here is that we get a sudden spike in traffic, say from a competition or a popular problem, that could overwhelm the containers running the user code. The reality is that 100k is still not a lot of users, and our API server, via horizontal scaling, should be able to handle this load without any issues. However, given code execution is CPU intensive, we need to be careful about how we manage the containers.
-
-
-> [!WARNING]
-> #### Bad Solution: Vertical Scaling
+> UserAPI GatewayDocument MetadataServiceDocument Metadata DBPOST /docsDocument id title documentVersionIdDocument ServiceWebsocketDocument OperationsDBWrite/ReceiveEdits, Cursor ChangesTransform OpsApplied OpsOn InitializationRead all OpsSend all Applied Ops on ConnectTransform Received OpsZookeeperQuery Hash RangesOperations timestamp documentVersionId metadata
+> ##### Challenges
 > 
-> ###### Approach
-> 
-> The easiest option is to just run our containers on a larger instance type with more CPU and memory. This is known as vertical scaling and is the simplest way to increase the capacity of our system.This is a good time to do a bit of math. If we estimate a peak of 10k submission at a time (imagine its a competition) and each submission runs against ~100 test case. We are likely to become CPU bound very quickly. Let's make the assumption that each test case takes 100ms to run. This means that each submission will take 10s to run. If we have 10k submissions, that's 100k test cases, which will take 10k seconds to run. That's over 27 hours and we would need approximately 1,667 CPU cores to handle this load within one minute. This clearly indicates that vertical scaling alone, especially considering the limitations with current maximum AWS instance types like AWS's X1 having only 128 cores, is not a viable solution.Even if we could, it's not easy to vertically scale dynamically so we'd have a big expensive machine sitting around most of the time not doing much. Big waste of money!
+> Moving compaction into the document service risks increasing latency for document operations (especially at the tail P99), we need to make sure they're not hogging our CPUs unnecessarily. One option for this is to run them in a separate process with lower CPU priority.
 
-> [!IMPORTANT]
-> #### Great Solution: Dynamic Horizontal Scaling
-> 
-> ###### Approach
-> 
-> We can horizontally scale each of the language specific containers to handle more submissions. This means that we can spin up multiple containers for each language and distribute submissions across them. This can be dynamically managed through auto-scaling groups that automatically adjust the number of active instances in response to current traffic demands, CPU utilization, or other memory metrics. In the case of AWS, we can use [ECS](https://aws.amazon.com/ecs/) to manage our containers and [ECS Auto Scaling](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/service-auto-scaling.html) to automatically adjust the number of containers based on demand.
-> ###### Challenges
-> 
-> The only considerable downside here is the risk of over-provisioning. If we spin up too many containers, we could end up wasting resources and incurring unnecessary costs. That said, modern cloud providers make it easy to scale up and down based on demand, so this is a manageable risk.
+### Some additional deep dives you might consider
 
-> [!IMPORTANT]
-> #### Great Solution: Horizontal Scaling w/ Queue
-> 
-> ###### Approach
-> 
-> We can take the same exact approach as above but add a queue between the API server and the containers. This will allow us to buffer submissions during peak times and ensure that we don't overwhelm the containers. We can use a managed queue service like [SQS](https://aws.amazon.com/sqs/) to handle this for us.When a user submits their code, the API server will add the submission to the queue and the containers will pull submissions off the queue as they become available. This will help us manage the load on the containers and ensure that we don't lose any submissions during peak times.Once our worker gets the results, it will notify the App Server so it can update both the database and the cache simultaneously.One important thing to note is that the introduction of the queue has made the system asynchronous. This means that the API server will no longer be able to return the results of the submission immediately. Instead, the user will need to poll the server for the results. We introduce a new endpoint, say `GET /check/:id`, that is polled every second by the client to check if the submission has been processed. It simply looks up the submission in the database and returns the results if they are available or returns a "processing" message if not.Some candidates try to introduce a persistent connection like WebSockets to avoid polling. This could certainly work, but it adds complexity to the system and is likely not necessary given the polling interval is only a second.Fun fact, this is exactly what [LeetCode](https://leetcode.com/) does when you submit a solution to a problem. Click submit with your network tab open and you'll see the polling in action!![LeetCode Network Tab](/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fleetcode-network.895fd6e4.png&w=3840&q=75)
-> ###### Challenges
-> 
-> There could be a really strong case made that this is overengineering and adding unecessary complexity. Given the scale of the system, it's likely that we could handle the load without the need for a queue and if we require users to register for competitions, we would have a good sense of when to expect peak traffic and could scale up the containers in advance.
+Google Docs is a beast with hundreds to thousands of engineers working on it, so we can't cover everything here. Here are some additional deep dives you might consider:
 
-
-
-![Scaling with Queue](https://d248djf5mc6iku.cloudfront.net/excalidraw/a8cc459df0cbaacafdb7a3ac2cac5bcf)
-
-While the addition of the queue is likely overkill from a volume perspective, I would still opt for this approach with my main justification being that it also enables retries in the event of a container failure. This is a nice to have feature that could be useful in the event of a container crash or other issue that prevents the code from running successfully. We'd simply requeue the submission and try again. Also, having that buffer could help you sleep at night knowing you're not going to lose any submissions, even in the event of a sudden spike in traffic (which I would not anticipate happening in this system).
-
-There is no right or wrong answer here, weighing the pros and cons of each approach is really the key in the interview.
-
-
-### 4) How would the system handle running test cases?
-
-
-
-One follow up question I like to ask is, "How would you actually do this? How would you take test cases and run them against user code of any language?" This breaks candidates out of "box drawing mode" and forces them to think about the actual implementation of their design.
-
-You definetely don't want to have to write a set of test cases for each problem in each language. That would be a nightmare to maintain. Instead, you'd write a single set of test cases per problem which can be run against any language.
-
-To do this, you'll need a standard way to serialize the input and output of each test case and a test harness for each language which can deserialize these inputs, pass them to the user's code, and compare the output to the deserialized expected output.
-
-For example, lets consider a simple question that asks the [maximum depth of a binary tree](https://leetcode.com/problems/maximum-depth-of-binary-tree/). Using `Python` as our example, we can see that the function itself takes in a `TreeNode` object.
-
-
-```
-# Definition for a binary tree node.
-# class TreeNode(object):
-#     def __init__(self, val=0, left=None, right=None):
-#         self.val = val
-#         self.left = left
-#         self.right = right
-class Solution(object):
-    def maxDepth(self, root):
-        """
-        :type root: TreeNode
-        :rtype: int
-        """
-```
-
-
-To actually run this code, we would need to have a `TreeNode` file that exists in the same directory as the user's code in the container. We would take the standardized, serialized input for the test case, deserialize it into a `TreeNode` object, and pass it to the user's code. The test case could look something like:
-
-
-```
-{
-  "id": 1,
-  "title": "Max Depth of Binary Tree",
-  ...
-  "testCases": [
-    {
-      "type": "tree",
-      "input": [3,9,20,null,null,15,7],
-      "output": 3
-    },
-    {
-      "type": "tree",
-      "input": [1,null,2],
-      "output": 2
-    }
-  ]
-}
-```
-
-
-For a `Tree` object, we've decided to serialize it into an array using inorder traversal. Each language will have it's own version of a `TreeNode` class that can deserialize this array into a `TreeNode` object to pass to the user's code.
-
-We'd need to define the serialization strategy for each data structure and ensure that the test harness for each language can deserialize the input and compare the output to the expected output.
-
-
-### Final Design
-
-
-
-Putting it all together, one final design could look like this:
-
-![Final LeetCode Design](https://d248djf5mc6iku.cloudfront.net/excalidraw/acdc4852dd458637565ebf1ed640e2fd)
-
-
+1. **Read-Only Mode**: Google Docs has a "read-only" mode where users can view documents without interfering with others. It's also considerably more scalable, millions of readers can be viewing the same document. How might we implement this?
+2. **Versioning**: Google Docs allows users to revert to previous versions of a document. How can we extend our snapshot/compact approach to support this?
+3. **Memory**: The memory usage of our `Document Service` can be a bottleneck. How can we further optimize it?
+4. **Offline Mode**: How might we expand our design if we want to allow our clients to operate in an offline mode? What additional considerations do we need to bring into our design?
 
 [What is Expected at Each Level?](https://www.hellointerview.com/blog/the-system-design-interview-what-is-expected-at-each-level)
 ---------------------------------------------------------------------------------------------------------------------------------
 
-
-
-You may be thinking, “how much of that is actually required from me in an interview?” Let’s break it down.
-
-
 ### Mid-level
 
-
-
-**Breadth vs. Depth:** A mid-level candidate will be mostly focused on breadth (80% vs 20%). You should be able to craft a high-level design that meets the functional requirements you've defined, but many of the components will be abstractions with which you only have surface-level familiarity.
-
-**Probing the Basics:** Your interviewer will spend some time probing the basics to confirm that you know what each component in your system does. For example, if you add an API Gateway, expect that they may ask you what it does and how it works (at a high level). In short, the interviewer is not taking anything for granted with respect to your knowledge.
-
-**Mixture of Driving and Taking the Backseat:** You should drive the early stages of the interview in particular, but the interviewer doesn’t expect that you are able to proactively recognize problems in your design with high precision. Because of this, it’s reasonable that they will take over and drive the later stages of the interview while probing your design.
-
-**The Bar for LeetCode:** For this question, an IC4 candidate will have clearly defined the API endpoints and data model, landed on a high-level design that is functional and meets the requirements. They would have understood the need for security and isolation when running user code and ideally proposed either a container, VM, or serverless function approach.
-
-
+Personally, I probably wouldn't ask this question of a mid-level candidate. That's not to say you won't get it, but I wouldn't. With that out of the way, I'd be looking for a candidate who can create a high-level design and then think through (together with some assistance) some of the issues that you'll encounter in a high concurrency problem like this. I want to see evidence that you can think on your feet, spitball solutions, and have a small (but growing) toolbox of technologies and approaches that you can apply to this problem.
 ### Senior
 
+For senior candidates, I would expect them to immediately start to grok some of the consistency and durability challenges in this problem. They may start with a very basic, inefficient solution but I expect them to be able to proactively identify bottlenecks and solve them. While I would not expect a candidate to necessarily know the distinction between OT and CRDT, I would expect them to be able to talk about database tradeoffs and limitations, and how they might impact our design. We might have time for an additional deep dive.
+### Staff
 
+For staff engineers, I'm expecting a degree of mastery over the problem. I'd expect them to be loosely familiar with CRDTs (if they're not, they'll make it up somewhere else) but intimately familiar with scaling socket services, consistency tradeoffs, serialization problems, transactions, and more. I'd expect to get through the deep dives and probably tack on an extra one if we're not too deep in optimizations.
 
-**Depth of Expertise**: As a senior candidate, expectations shift towards more in-depth knowledge — about 60% breadth and 40% depth. This means you should be able to go into technical details in areas where you have hands-on experience. It's crucial that you demonstrate a deep understanding of key concepts and technologies relevant to the task at hand.
+References
+----------
 
-**Articulating Architectural Decisions**: You should be able to clearly articulate the pros and cons of different architectural choices, especially how they impact scalability, performance, and maintainability. You justify your decisions and explain the trade-offs involved in your design choices.
+* [Real-Time Mouse Pointers](https://www.canva.dev/blog/engineering/realtime-mouse-pointers/): How Canva enables collaborative editing using WebRTC.
 
-**Problem-Solving and Proactivity**: You should demonstrate strong problem-solving skills and a proactive approach. This includes anticipating potential challenges in your designs and suggesting improvements. You need to be adept at identifying and addressing bottlenecks, optimizing performance, and ensuring system reliability.
-
-**The Bar for LeetCode:** For this question, IC5 candidates are expected to speed through the initial high level design so you can spend time discussing, in detail, how you would run user code in a secure and isolated manner. You should be able to discuss the pros and cons of running code in a container vs a VM vs a serverless function and be able to justify your choice. You should also be able to break out of box drawing mode and discuss how you would actually run test cases against user code.
-
-
-### Staff+
-
-
-
-I don't typically ask this question of staff+ candidates given it is on the easier side. That said, if I did, I would expect that they would be able to drive the entire conversation, proactively identifying potential issues with the design and proposing solutions to address them. They should be able to discuss the trade-offs between different approaches and justify their decisions. They should also be able to discuss how they would actually run test cases against user code and how they would handle running code in a secure and isolated manner while meeting the 5 second response time requirement. They would ideally design a very simple system free of over engineering, but with a clear path to scale if needed.
 
