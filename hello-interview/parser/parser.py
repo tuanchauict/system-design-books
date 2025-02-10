@@ -19,9 +19,24 @@ class MyConverter(MarkdownConverter):
             if el.name == 'span' and 'MuiBox-root mui-1vu004u' in el.attrs.get('class', []):
                 return f'`{el.text}`'
         return super().convert(el)
+    
+class GitHubMarkdownConverter(MarkdownConverter):
+    def convert_blockquote(self, el, text, convert_as_inline):
+        custom_class = ' '.join(el.attrs.get('class', []))
+        prefix = {
+            'info': '[!NOTE]',
+            'tip': '[!TIP]',
+            'warning': '[!CAUTION]',
+            'solution.bad': '[!WARNING]',
+            'solution.good': '[!IMPORTANT]',
+            'solution.great': '[!IMPORTANT]'
+        }
+        
+        text = super().convert_blockquote(el, text, convert_as_inline)
+        return f'\n> {prefix.get(custom_class, "")}{text}'
 
-def parse_one(html: Tag):
-    return MyConverter().convert(str(html))
+def parse_one(converter: MarkdownConverter, html: Tag):
+    return converter.convert(str(html))
 
 
 def preprocess(html_str: str):
@@ -55,13 +70,14 @@ def preprocess(html_str: str):
     # Remove all button
     for button in soup.find_all('button'):
         button.decompose()
-        
+    
+    
     # Replace all div with class `MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters mui-ifi55z` with blockquote and solution.bad class
-    for div in soup.find_all('div', class_='MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters mui-ifi55z'):
+    for div in soup.find_all('div', class_='MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-ifi55z'):
         div.name = 'blockquote'
         div.attrs = {'class': 'solution.bad'}
-    # Replace all div with class `MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-11r69q9` with blockquote and solution.good class
-    for div in soup.find_all('div', class_='MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-11r69q9'):
+    # Replace all div with class `MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-nhbct3` with blockquote and solution.good class
+    for div in soup.find_all('div', class_='MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-nhbct3'):
         div.name = 'blockquote'
         div.attrs = {'class': 'solution.good'}
     # Replace all div with class `MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-11r69q9` with blockquote and solution.great class
@@ -81,7 +97,7 @@ def preprocess(html_str: str):
         
     return soup
 
-def parse_all(html_str: str):
+def parse_all(converter: MarkdownConverter, html_str: str):
     soup = preprocess(html_str)
         
     children = soup.find(True).find_all(recursive=False)
@@ -92,11 +108,11 @@ def parse_all(html_str: str):
             print(child)
             print(child.attrs.get('class'))
             print(">")
-            print(parse_one(child))
-            f.write(parse_one(child))
-            f.write('\n')
+            print(parse_one(converter, child))
+            f.write(parse_one(converter, child))
+            f.write('\n\n')
 
 if __name__ == '__main__':
     with open('sample.html', 'r') as f:
         html_str = f.read()
-        parse_all(html_str)
+        parse_all(GitHubMarkdownConverter(), html_str)
