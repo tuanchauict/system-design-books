@@ -8,7 +8,7 @@ image_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.svg'}
 class EpubBuilder:
     def __init__(self):
         self.project_dir = Path('.')
-        self.content_dir = self.project_dir / 'content'
+        self.content_dir = self.project_dir / 'raw'
         self.output_dir = self.project_dir / 'output'
         self.temp_dir = self.output_dir / 'temp'
         
@@ -80,7 +80,7 @@ class EpubBuilder:
                 '-f', 'markdown+smart',
                 '-t', 'epub3',
                 '--toc',
-                '--toc-depth=3',
+                '--toc-depth=2',
                 '--resource-path', ":".join(str(f.parent) for f in content_files),  # Add resource path
                 '-o', str(self.output_dir / 'book.epub'),
                 str(self.metadata_file),
