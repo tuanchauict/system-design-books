@@ -1,5 +1,27 @@
+# Simplified input
+input=$1
+
+# Find the matching file
+matches=($(find . -type f -name "$input*.md"))
+
+# Check if there are no matches or multiple matches
+if [ ${#matches[@]} -eq 0 ]; then
+    echo "Error: No matching files found for pattern '$input*.md'"
+    exit 1
+elif [ ${#matches[@]} -gt 1 ]; then
+    echo "Error: Multiple matching files found for pattern '$input*.md'"
+    exit 1
+fi
+# Use the single matching file
+file=${matches[0]}
 # filename without .md extension
-filename=$(basename -- "$1" .md)
-path=$(dirname -- "$1")
-title=$(head -n 1 "$1")
-pandoc -f markdown+smart -t epub3 -o output/$filename.epub --css style.css --resource-path "$path" --metadata title="$title" $1
+filename=$(basename -- "$file" .md)
+path=$(dirname -- "$file")
+title=$(head -n 1 "$file")
+pandoc -f markdown+smart -t epub3 \
+    -o output/$filename.epub \
+    --css style.css \
+    --resource-path "$path" \
+    --metadata title="$title" \
+    --highlight-style pygments \
+    $file

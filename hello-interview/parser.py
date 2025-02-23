@@ -2,11 +2,14 @@ from markdownify import markdownify as md
 from markdownify import MarkdownConverter
 from bs4 import BeautifulSoup, Tag
 from os import path
+from pygments.lexers import guess_lexer, ClassNotFound
+
 
 class MyConverter(MarkdownConverter):
     def convert_blockquote(self, el, text, convert_as_inline):
         custom_class = el.attrs.get('class', [])
-        return f':::{' '.join(custom_class)}{text}:::\n\n'
+        text.strip()
+        return f':::{' '.join(custom_class)}\n{text}\n:::\n\n'
     
     # def convert_h4(self, el, text, convert_as_inline=True):
     #     custom_class = el.attrs.get('class', [])
@@ -19,6 +22,36 @@ class MyConverter(MarkdownConverter):
             if el.name == 'span' and 'MuiBox-root mui-1vu004u' in el.attrs.get('class', []):
                 return f'`{el.text}`'
         return super().convert(el)
+    
+    def convert_img(self, el, text, convert_as_inline):
+        # if the src starts with `/`, fix the url with `https://www.hellointerview.com/`
+        src = el.attrs.get('src', '')
+        if src.startswith('/'):
+            src = f'https://www.hellointerview.com{src}'
+            el.attrs['src'] = src
+        return super().convert_img(el, text, convert_as_inline)
+    
+    def convert_pre(self, el, text, convert_as_inline):
+        code = el.text
+        return f'```{self.guess_language(code)}\n{code}\n```\n\n'
+        
+    def guess_language(self, code):
+        code = code.strip()
+        if 'def ' in code:
+            return 'python'
+        if "function " in code:
+            return 'javascript'
+        if 'SELECT ' in code:
+            return 'sql'
+        if code.startswith('{') and code.endswith('}'):
+            return 'json'
+        
+        try:
+            lexer = guess_lexer(code)
+            return lexer.aliases[0]
+            print(lexer.aliases)
+        except ClassNotFound:
+            return ''
     
 class GitHubMarkdownConverter(MarkdownConverter):
     def convert_blockquote(self, el, text, convert_as_inline):
@@ -142,7 +175,7 @@ def parse_all(converter: MarkdownConverter, file_path: str):
     
     # print(soup.body)
     children = [c for c in soup.body.children if isinstance(c, Tag)]
-    print(children[0])
+    # print(children[0])
     metadata_node = children[0]
     title = metadata_node.find('h1').text
     
@@ -163,8 +196,8 @@ def parse_all(converter: MarkdownConverter, file_path: str):
             f.write('\n```\n\n')
         
         for child in children[1:]:
-            print('-------------------')
-            print(parse_one(converter, child))
+            # print('-------------------')
+            # print(parse_one(converter, child))
             f.write(parse_one(converter, child))
             f.write('\n\n')
 
