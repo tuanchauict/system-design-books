@@ -163,8 +163,24 @@ def preprocess(file_path: str, html_str: str):
         img.attrs = {'src': svg_name}
         svg.replace_with(img)
     
-    # with open('output.html', 'w') as f:
-    #     f.write(str(soup))
+    # Read all items by class `MuiGrid-root MuiGrid-container MuiGrid-direction-xs-column mui-1tdxmx0`, inside this has 2 elements, 1st is the image under `object` tag, 2nd is the caption
+    # Replace this with img tag with src point to `data` attribute of the object tag, alt is the caption
+    for i, div in enumerate(soup.find_all('div', class_='MuiGrid-root MuiGrid-container MuiGrid-direction-xs-column mui-1tdxmx0', recursive=True), start=1):
+        object_tag = div.find('object')
+        if not object_tag:
+            continue
+        print(div)
+        # caption is from 'MuiGrid-root MuiGrid-item mui-1wxaqej' class
+        caption = div.find('div', class_='MuiGrid-root MuiGrid-item mui-1wxaqej')
+        print(caption)
+        print(div.text.strip())
+        
+        
+        caption_text = caption.select_one('span').text.strip() if caption else ''
+        img = soup.new_tag('img')
+        img.attrs = {'src': object_tag.attrs.get('data', ''), 'alt': caption_text}
+        div.replace_with(img)
+        
     
     return soup
 
@@ -173,8 +189,9 @@ def parse_all(converter: MarkdownConverter, file_path: str):
         html_str = f.read()
     soup = preprocess(file_path, html_str)
     
+    root = soup.body if not soup.select_one('#markdown') else soup.select_one('#markdown')
     # print(soup.body)
-    children = [c for c in soup.body.children if isinstance(c, Tag)]
+    children = [c for c in root.children if isinstance(c, Tag)]
     # print(children[0])
     metadata_node = children[0]
     title = metadata_node.find('h1').text
