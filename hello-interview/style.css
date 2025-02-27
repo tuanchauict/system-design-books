@@ -5,22 +5,19 @@
 }
 
 .warning {
-    background-color: #fff3cd;
-    border: 2px solid #856404;
+    border: 2px solid #c62800;
     padding: 8px;
     margin: 10px 0;
 }
 
 .info {
-    background-color: #d1ecf1;
-    border: 2px solid #0c5460;
+    border: 2px solid #0062ff;
     padding: 8px;
     margin: 10px 0;
 }
 
 .tip {
-    background-color: #d4edda;
-    border: 4px double #155724;
+    border: 2px solid #028220;
     padding: 8px;
     margin: 10px 0;
 }

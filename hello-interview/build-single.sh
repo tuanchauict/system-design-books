@@ -18,6 +18,10 @@ file=${matches[0]}
 filename=$(basename -- "$file" .md)
 path=$(dirname -- "$file")
 title=$(head -n 1 "$file")
+
+echo $filename
+echo $title 
+
 pandoc -f markdown+smart -t epub3 \
     -o output/$filename.epub \
     --css style.css \
