@@ -237,6 +237,7 @@ To shorten a URL, we’ll need a POST endpoint that takes in the long URL and op
 
 
 
+
 ```scilab
 // Shorten a URL
 POST /urls
@@ -256,6 +257,7 @@ POST /urls
 
 
 For redirection, we’ll need a GET endpoint that takes in the short code and redirects the user to the original long URL. GET is the right verb here because we are reading the existing long url from our database based on the short code.
+
 
 
 
@@ -378,6 +380,7 @@ The response back to the client looks like this:
 
 
 
+
 ```http
 HTTP/1.1 301 Moved Permanently
 Location: https://www.original-long-url.com
@@ -393,6 +396,7 @@ Location: https://www.original-long-url.com
 
 
 The response back to the client looks like this:
+
 
 
 

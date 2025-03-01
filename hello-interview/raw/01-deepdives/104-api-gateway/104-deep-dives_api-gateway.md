@@ -179,6 +179,7 @@ For example, a simple routing configuration might look like:
 
 
 
+
 ```scdoc
 routes:
   - path: /users/*
@@ -231,6 +232,7 @@ The gateway will transform the response from the backend service into the format
 
 
 For example:
+
 
 
 

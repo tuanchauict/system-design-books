@@ -196,6 +196,7 @@ Let's start with an endpoint to upload a video. We might have an endpoint like t
 
 
 
+
 ```gdscript
 POST /upload
 Request:
@@ -210,6 +211,7 @@ Request:
 
 
 To stream a video, our endpoint might retrieve the video data to play it on device:
+
 
 
 

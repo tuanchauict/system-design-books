@@ -222,6 +222,7 @@ First, let's be able to create a chat.
 
 
 
+
 ```scilab
 // -> createChat
 {
@@ -237,6 +238,7 @@ First, let's be able to create a chat.
 
 
 Now we should be able to send messages on the chat.
+
 
 
 
@@ -257,6 +259,7 @@ We need a way to create attachments (note: I'm going to amend this later in the 
 
 
 
+
 ```scilab
 // -> createAttachment
 {
@@ -272,6 +275,7 @@ We need a way to create attachments (note: I'm going to amend this later in the 
 
 
 And we need a way to add/remove users to the chat.
+
 
 
 
@@ -308,6 +312,7 @@ When a chat is created or updated ...
 
 
 
+
 ```splus
 // <- chatUpdate
 {
@@ -321,6 +326,7 @@ When a chat is created or updated ...
 
 
 When a message is received ...
+
 
 
 

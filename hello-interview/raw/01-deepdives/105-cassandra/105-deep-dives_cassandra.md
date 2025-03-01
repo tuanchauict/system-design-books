@@ -64,6 +64,7 @@ At the most basic level, you can liken Cassandra's data structures to a large JS
 
 
 
+
 ```json
 {
   "keyspace1": {
@@ -116,6 +117,7 @@ One of the most important constructs in Cassandra is the "primary key" of a tabl
 
 
 When you create a table in Cassandra via the Cassandra Query Language (CQL) dialect, you specify the primary key as part of defining the schema. Below are a few examples of different primary keys with comments inlined:
+
 
 
 
@@ -259,6 +261,7 @@ Cassandra has two different "replication strategies" it can employ: [`NetworkTop
 
 
 Below is Cassandra CQL for specifying different replication strategy configurations for a keyspace:
+
 
 
 
@@ -530,6 +533,7 @@ To service the above needs, Discord originally opted to create a `messages` tabl
 
 
 
+
 ```scdoc
 CREATE TABLE messages (
   channel_id bigint,
@@ -573,6 +577,7 @@ To solve the large partition problem, Discord introduced the concept of a `bucke
 
 
 The revised schema looks like this:
+
 
 
 
@@ -624,6 +629,7 @@ When considering how to model our data to support a ticket browsing UI, we might
 
 
 
+
 ```scdoc
 CREATE TABLE tickets (
   event_id bigint,
@@ -671,6 +677,7 @@ This UX unveils that we can add the concept of `section_id` to our `tickets` tab
 
 
 
+
 ```scdoc
 CREATE TABLE tickets (
   event_id bigint,
@@ -692,6 +699,7 @@ The above schema is an improvement on our original schema. The schema distribute
 
 
 You might ask: how do we now show ticket data for the entire event? To service the UI that shows all sections and high-level information about ticket availability / price, we can consider a separate table `event_sections`.
+
 
 
 

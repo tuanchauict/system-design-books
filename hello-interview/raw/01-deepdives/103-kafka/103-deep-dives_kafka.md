@@ -173,6 +173,7 @@ As a quick example, here is how we might put a message on the topic `my-topic` u
 
 
 
+
 ```scdoc
 kafka-console-producer --broker-list localhost:9092 --topic my_topic --property "parse.key=true" --property "key.separator=:"
 > key1: Hello, Kafka with key!
@@ -194,6 +195,7 @@ The `--property "parse.key=true"` and `--property "key.separator=:"` flags are u
 
 
 We can see what the same would look like using `kafkajs`, a popular Node.js client for Kafka:
+
 
 
 
@@ -283,6 +285,7 @@ To round out our earlier example, here is how we might consume messages from the
 
 
 
+
 ```scdoc
 kafka-console-consumer --bootstrap-server localhost:9092 --topic my_topic --from-beginning
 
@@ -296,6 +299,7 @@ key2: Another message with a different key
 
 
 Similarly, with `kafkajs`, we can consume messages from the `my_topic` topic:
+
 
 
 
@@ -569,6 +573,7 @@ First up, we may fail to get a message to Kafka in the first place. Errors can o
 
 
 
+
 ```gdscript
 const producer = kafka.producer({
   retry: {
@@ -627,6 +632,7 @@ This first thing we can do is batch messages in the producer before sending them
 
 
 
+
 ```gdscript
 const producer = kafka.producer({
   batch: {
@@ -641,6 +647,7 @@ const producer = kafka.producer({
 
 
 Another common way to improve throughput is by compressing the messages on the producer. This can be done by setting the `compression` option in the producer configuration. Kafka supports several compression algorithms, including GZIP, Snappy, and LZ4. Essentially, we're just making the messages smaller so that they can be sent faster.
+
 
 
 

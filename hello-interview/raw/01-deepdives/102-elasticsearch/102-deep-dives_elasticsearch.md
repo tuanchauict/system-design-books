@@ -62,6 +62,7 @@ Let's start with names. The important concepts of Elasticsearch from a client pe
 
 
 
+
 ```json
 {
   "id": "XYZ123",
@@ -124,6 +125,7 @@ Here's an example of a mapping:
 
 
 
+
 ```json
 {
   "properties": {
@@ -174,6 +176,7 @@ A simple PUT request will create an index with a dynamic mapping, 1 shard, and 1
 
 
 
+
 ```scilab
 // PUT /books
 {
@@ -194,6 +197,7 @@ A simple PUT request will create an index with a dynamic mapping, 1 shard, and 1
 
 
 If dynamic mapping isn't appropriate (maybe most of the fields in my data aren't searchable), I can set a mapping for the index up front. This lets Elasticsearch know that certain fields should be treated as searchable and what types to expect in those fields.
+
 
 
 
@@ -254,6 +258,7 @@ So I got an index and a mapping, great. Next, I need to add documents to the ind
 
 
 
+
 ```scilab
 // POST /books/_doc
 {
@@ -286,6 +291,7 @@ If I want to add another, I can make another request.
 
 
 
+
 ```scilab
 // POST /books/_doc
 {
@@ -310,6 +316,7 @@ If I want to add another, I can make another request.
 
 
 Each of these requests will return a document ID along with data about how the document was persisted across the cluster.
+
 
 
 
@@ -348,6 +355,7 @@ Updating a document is similar to creating a document, but you need to specify t
 
 
 
+
 ```scilab
 // PUT /books/_doc/kLEHMYkBq7V9x4qGJOnh
 {
@@ -381,6 +389,7 @@ If we want to guard against this we can use the `_version` field from above to s
 
 
 
+
 ```scilab
 // PUT /books/_doc/kLEHMYkBq7V9x4qGJOnh?version=1
 ...
@@ -397,6 +406,7 @@ These errors give clients an opportunity to handle the conflict and retry the re
 
 
 Finally, the `_update` endpoint (note POST) allows you to update some fields of a document without having to fetch the entire document.
+
 
 
 
@@ -444,6 +454,7 @@ A simple query might be to search for books with "Great" in the title:
 
 
 
+
 ```scilab
 // GET /books/_search
 {
@@ -473,6 +484,7 @@ We can also search for books with "Great" in the title that are priced less than
 
 
 
+
 ```scilab
 // GET /books/_search
 {
@@ -492,6 +504,7 @@ We can also search for books with "Great" in the title that are priced less than
 
 
 Finally, we can search within our nested "reviews" field for books with an "excellent" review:
+
 
 
 
@@ -519,6 +532,7 @@ Finally, we can search within our nested "reviews" field for books with an "exce
 
 
 The response might look like this:
+
 
 
 
@@ -602,6 +616,7 @@ To sort results, you can use the `sort` parameter in your search query. Here's a
 
 
 
+
 ```scilab
 // GET /books/_search
 {
@@ -619,6 +634,7 @@ To sort results, you can use the `sort` parameter in your search query. Here's a
 
 
 You can also sort by multiple fields. For instance, to sort by price ascending and then by publish date descending:
+
 
 
 
@@ -645,6 +661,7 @@ You can also sort by multiple fields. For instance, to sort by price ascending a
 
 
 Elasticsearch also allows sorting based on custom scripts (using the "Painless" scripting language). This is useful when you need to sort by a computed value. Here's an example that sorts books by a discounted price (10% off) - which you would never do because the sort order is identical:
+
 
 
 
@@ -678,6 +695,7 @@ Elasticsearch also allows sorting based on custom scripts (using the "Painless" 
 
 
 When dealing with nested fields, you need to use a nested sort. This ensures that the sort values come from the same nested object. Here's how you might sort books by their highest review rating:
+
 
 
 
@@ -758,6 +776,7 @@ Example query:
 
 
 
+
 ```scilab
 // GET /my_index/_search
 {
@@ -793,6 +812,7 @@ This method is more efficient for deep pagination. It uses the sort values of th
 
 
 Example:
+
 
 
 
@@ -880,6 +900,7 @@ Elasticsearch uses the `point in time` (PIT) API in conjunction with `search_aft
 1. **Create a PIT**:
 
 
+
 ```scilab
 // POST /my_index/_pit?keep_alive=1m
 ```
@@ -895,6 +916,7 @@ This returns a PIT ID.
 
 
 1. **Use the PIT in searches**:
+
 
 
 ```scilab
@@ -924,6 +946,7 @@ This returns a PIT ID.
 1. **For subsequent pages, add `search_after`**:
 
 
+
 ```scilab
 // GET /_search
 {
@@ -950,6 +973,7 @@ This returns a PIT ID.
 
 
 1. **Close the PIT when done**:
+
 
 
 ```scilab

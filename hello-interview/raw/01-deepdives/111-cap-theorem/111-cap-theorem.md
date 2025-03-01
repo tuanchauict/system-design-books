@@ -52,7 +52,7 @@ Imagine you're running a website with two servers - one in the USA and one in Eu
 3. When User B in Europe views User A's profile, they see the updated name
 
 
-![](https://www.hellointerview.com/_next/static/f407988d6c0741776326ae3d242165e6.svg)
+![Basic Replication](https://www.hellointerview.com/_next/static/f407988d6c0741776326ae3d242165e6.svg)
 
 Everything works smoothly until we encounter a network partition - the connection between our USA and Europe servers goes down. Now we have a critical decision to make:
 
@@ -64,7 +64,7 @@ When User B tries to view User A's profile, should we:
 * Option B: Show potentially stale data (choosing availability)
 
 
-![](https://www.hellointerview.com/_next/static/0e9f223ad73955c1f17f7e417d8c091d.svg)
+![Network Partition](https://www.hellointerview.com/_next/static/0e9f223ad73955c1f17f7e417d8c091d.svg)
 
 This is where CAP theorem becomes practical - we must choose between consistency and availability.
 

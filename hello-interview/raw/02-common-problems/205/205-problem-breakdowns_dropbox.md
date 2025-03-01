@@ -193,6 +193,7 @@ Starting with uploading a file, we might have an endpoint like this:
 
 
 
+
 ```text
 POST /files
 Request:
@@ -207,6 +208,7 @@ Request:
 
 
 To download a file, our endpoint can be:
+
 
 
 
@@ -232,6 +234,7 @@ To share a file, we might have an endpoint like this:
 
 
 
+
 ```text
 POST /files/{fileId}/share
 Request:
@@ -245,6 +248,7 @@ Request:
 
 
 Lastly, we need a way for clients to query for changes to files on the remote server. This way we know which files need to be synced to the local device.
+
 
 
 
@@ -297,6 +301,7 @@ For the metadata, we can use a [NoSQL database](https://www.hellointerview.com/l
 
 
 Our schema will be a simple document and can start with something like this:
+
 
 
 
@@ -743,6 +748,7 @@ With chunks, it's rather straightforward for us to show a progress indicator to 
 
 
 The next question is: **how will we handle resumable uploads?** We need to keep track of which chunks have been uploaded and which haven't. We can do this by saving the state of the upload in the database, specifically in our `FileMetadata` table. Let's update the `FileMetadata` schema to include a `chunks` field.
+
 
 
 

@@ -33,7 +33,7 @@ class MyConverter(MarkdownConverter):
     
     def convert_pre(self, el, text, convert_as_inline):
         code = el.text
-        return f'```{self.guess_language(code)}\n{code}\n```\n\n'
+        return f'\n```{self.guess_language(code)}\n{code}\n```\n\n'
         
     def guess_language(self, code):
         code = code.strip()
@@ -75,6 +75,7 @@ def parse_one(converter: MarkdownConverter, html: Tag):
 
 def preprocess(file_path: str, html_str: str):
     soup = BeautifulSoup(html_str, 'html.parser')
+    
     # Replace all <span class="MuiBox-root mui-1vu004u"> tag with `code` tag
     for span in soup.find_all('span', class_='MuiBox-root mui-1vu004u', recursive=True):
         span.name = 'code'
@@ -95,13 +96,6 @@ def preprocess(file_path: str, html_str: str):
         div.name = 'blockquote'
         div.attrs = {'class': 'warning'}
     
-    # Remove div with class `MuiGrid-root MuiGrid-item mui-1wxaqej` since this is the image caption which is already included in the image alt text
-    for div in soup.find_all('div', class_='MuiGrid-root MuiGrid-item mui-1wxaqej'):
-        div.decompose()
-    
-    # Remove all button
-    for button in soup.find_all('button'):
-        button.decompose()
     
     # Replace all div with class `MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters mui-ifi55z` with blockquote and solution.bad class
     for div in soup.find_all('div', class_='MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-ifi55z'):
@@ -165,21 +159,25 @@ def preprocess(file_path: str, html_str: str):
     
     # Read all items by class `MuiGrid-root MuiGrid-container MuiGrid-direction-xs-column mui-1tdxmx0`, inside this has 2 elements, 1st is the image under `object` tag, 2nd is the caption
     # Replace this with img tag with src point to `data` attribute of the object tag, alt is the caption
-    for i, div in enumerate(soup.find_all('div', class_='MuiGrid-root MuiGrid-container MuiGrid-direction-xs-column mui-1tdxmx0', recursive=True), start=1):
+    for i, div in enumerate(soup.find_all('div', class_='MuiTypography-root MuiTypography-body1 mui-1qj780c', recursive=True), start=1):
         object_tag = div.find('object')
         if not object_tag:
             continue
-        print(div)
         # caption is from 'MuiGrid-root MuiGrid-item mui-1wxaqej' class
         caption = div.find('div', class_='MuiGrid-root MuiGrid-item mui-1wxaqej')
-        print(caption)
-        print(div.text.strip())
-        
         
         caption_text = caption.select_one('span').text.strip() if caption else ''
         img = soup.new_tag('img')
         img.attrs = {'src': object_tag.attrs.get('data', ''), 'alt': caption_text}
         div.replace_with(img)
+        
+    # Remove all button
+    for button in soup.find_all('button'):
+        button.decompose()
+        
+    # Remove div with class `MuiGrid-root MuiGrid-item mui-1wxaqej` since this is the image caption which is already included in the image alt text
+    for div in soup.find_all('div', class_='MuiGrid-root MuiGrid-item mui-1wxaqej'):
+        div.decompose()
         
     
     return soup

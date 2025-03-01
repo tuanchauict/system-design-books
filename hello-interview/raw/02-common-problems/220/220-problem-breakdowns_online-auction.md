@@ -392,7 +392,8 @@ OCC is ideal for our system because bid conflicts are relatively rare (most bids
 
 1. Read the auction row and get the current max bid (this is what is referred to as the 'version' with OCC)
 2. Validate that the new bid is higher than the max bid
-3. Try to update the auction row, but only if the max bid hasn't changed:```scdoc
+3. Try to update the auction row, but only if the max bid hasn't changed:
+   ```scdoc
    UPDATE auctions 
    SET max_bid = :new_bid 
    WHERE id = :auction_id AND max_bid = :original_max_bid

@@ -102,6 +102,7 @@ Redis' wire protocol is a custom query language comprised of simple strings whic
 
 
 
+
 ```scdoc
 SET foo 1  
 GET foo     # Returns 1
@@ -257,6 +258,7 @@ We can use Redis' sorted sets to maintain a list of the top liked posts for a gi
 
 
 
+
 ```scdoc
 ZADD tiger_posts 500 "SomeId1" # Add the Tiger woods post
 ZADD tiger_posts 1 "SomeId2" # Add some tweet about zoo tigers
@@ -290,6 +292,7 @@ Implementation of this in Redis is simple. When a request comes in, we increment
 
 
 Redis natively supports geospatial indexes with commands like `GEOADD` and `GEORADIUS`. The basic commands are simple:
+
 
 
 

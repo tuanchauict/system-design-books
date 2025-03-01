@@ -200,6 +200,7 @@ Starting with viewing a list of problems, we'll have a simple GET endpoint that 
 
 
 
+
 ```ecl
 GET /problems?page=1&limit=100 -> Partial<Problem>[]
 ```
@@ -222,6 +223,7 @@ Next, we'll need an endpoint to view a specific problem. This will be another GE
 
 
 
+
 ```ecl
 GET /problems/:id?language={language} -> Problem
 ```
@@ -240,6 +242,7 @@ Then, we'll need an endpoint to submit a solution to a problem. This will be a P
 
 
 
+
 ```ecl
 POST /problems/:id/submit -> Submission
 {
@@ -255,6 +258,7 @@ POST /problems/:id/submit -> Submission
 
 
 Finally, we'll need an endpoint to view a live leaderboard for competitions. This will be a GET endpoint that returns the ranked list of users based on their performance in the competition.
+
 
 
 
@@ -325,6 +329,7 @@ The core components here are:
 
 
 Our `Problem` schema would look something like this:
+
 
 
 
@@ -507,6 +512,7 @@ The easiest thing we can do when users request the leaderboard via `/leaderboard
 
 
 In a SQL database, this would be a query like:
+
 
 
 
@@ -809,6 +815,7 @@ For example, lets consider a simple question that asks the [maximum depth of a b
 
 
 
+
 ```python
 # Definition for a binary tree node.
 # class TreeNode(object):
@@ -829,6 +836,7 @@ class Solution(object):
 
 
 To actually run this code, we would need to have a `TreeNode` file that exists in the same directory as the user's code in the container. We would take the standardized, serialized input for the test case, deserialize it into a `TreeNode` object, and pass it to the user's code. The test case could look something like:
+
 
 
 

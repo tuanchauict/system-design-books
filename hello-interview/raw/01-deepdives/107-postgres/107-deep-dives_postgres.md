@@ -164,6 +164,7 @@ By default, PostgreSQL will create a B-tree index on your primary key column, bu
 
 
 
+
 ```scdoc
 -- This is your bread and butter index
 CREATE INDEX idx_users_email ON users(email);
@@ -1025,7 +1026,8 @@ SQL commands fall into four main categories:
 1. **DDL (Data Definition Language)**
    
    * Creates and modifies database structure
-   * Examples: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE````text
+   * Examples: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`
+   ```text
    CREATE TABLE users (
      id SERIAL PRIMARY KEY,
      email VARCHAR(255) UNIQUE
@@ -1036,7 +1038,8 @@ SQL commands fall into four main categories:
 2. **DML (Data Manipulation Language)**
    
    * Manages data within tables
-   * Examples: `SELECT`, `INSERT`, `UPDATE`, `DELETE````sql
+   * Examples: `SELECT`, `INSERT`, `UPDATE`, `DELETE`
+   ```sql
    -- Find all users who joined in the last week
    SELECT * FROM users 
    WHERE created_at > NOW() - INTERVAL '7 days';
@@ -1048,14 +1051,16 @@ SQL commands fall into four main categories:
 3. **DCL (Data Control Language)**
    
    * Controls access permissions
-   * Examples: `GRANT`, `REVOKE````sql
+   * Examples: `GRANT`, `REVOKE`
+   ```sql
    -- Give read access to a specific user
    GRANT SELECT ON users TO read_only_user;
    ```
 4. **TCL (Transaction Control Language)**
    
    * Manages transactions
-   * Examples: `BEGIN`, `COMMIT`, `ROLLBACK````componentpascal
+   * Examples: `BEGIN`, `COMMIT`, `ROLLBACK`
+   ```componentpascal
    BEGIN;
      -- Multiple operations...
    COMMIT;

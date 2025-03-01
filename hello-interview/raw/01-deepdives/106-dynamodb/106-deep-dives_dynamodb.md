@@ -100,6 +100,7 @@ Consider a `users` table in DynamoDB, structured as follows:
 
 
 
+
 ```json
 {
   "PersonID": 101,
@@ -377,6 +378,7 @@ In SQL, you'd write:
 
 
 
+
 ```sql
 SELECT * FROM users WHERE user_id = 101
 ```
@@ -386,6 +388,7 @@ SELECT * FROM users WHERE user_id = 101
 
 
 But in DynamoDB, this would be translated to a query operation like this:
+
 
 
 
@@ -418,6 +421,7 @@ SQL scan equivalent:
 
 
 
+
 ```sql
 SELECT * FROM users
 ```
@@ -427,6 +431,7 @@ SELECT * FROM users
 
 
 DynamoDB scan operation:
+
 
 
 

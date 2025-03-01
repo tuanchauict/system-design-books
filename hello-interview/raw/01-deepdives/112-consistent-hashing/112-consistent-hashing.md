@@ -32,11 +32,11 @@ Imagine you're designing a ticketing system like TicketMaster. Initially, your s
 * Everything works smoothly at first
 
 
-![](https://www.hellointerview.com/_next/static/2377fa643168deb32245369a93310a3f.svg)
+![Client Server Database](https://www.hellointerview.com/_next/static/2377fa643168deb32245369a93310a3f.svg)
 
 But success brings challenges. As your platform grows popular and hosts more events, a single database can no longer handle the load. You need to distribute your data across multiple databases – a process called sharding.
 
-![](https://www.hellointerview.com/_next/static/1a58bc4898891321bc10e74040240b8d.svg)
+![Sharding](https://www.hellointerview.com/_next/static/1a58bc4898891321bc10e74040240b8d.svg)
 
 The question we need to answer is: **How do we know which events to store on which database instance?**
 
@@ -54,9 +54,10 @@ The most straightforward approach to distribute data across multiple databases i
 3. The result tells us which database should store that event
 
 
-![](https://www.hellointerview.com/_next/static/6d2135bd5e7483f62bd8312b0d80f784.svg)
+![Modulo Hashing](https://www.hellointerview.com/_next/static/6d2135bd5e7483f62bd8312b0d80f784.svg)
 
 In code, it looks like this:
+
 
 ```scdoc
 database_id = hash(event_id) % number_of_databases
@@ -65,6 +66,7 @@ database_id = hash(event_id) % number_of_databases
 
 
 For a concrete example with 3 databases:
+
 
 ```text
 Event #1234 → hash(1234) % 3 = 1 → Database 1
@@ -78,6 +80,7 @@ Great! This works well, until you run into a few problems.
 
 The first problem comes when you want to add a fourth database instance. To do so, you naively think that all you need to do is run the modulo operation with 4 instead of 3.
 
+
 ```scdoc
 database_id = hash(event_id) % 4
 ```
@@ -88,7 +91,7 @@ You change the code, and push to production but then your database activity goes
 
 What happened was the change in the hash function did not only impact data that should be stored on the new instance, but it changed which database instance almost *every* event was stored on.
 
-![](https://www.hellointerview.com/_next/static/4dd7e8af01180314ff888a2792ef6b52.svg)
+![Issue adding a Node](https://www.hellointerview.com/_next/static/4dd7e8af01180314ff888a2792ef6b52.svg)
 
 For example, event #1234 used to map to database 1, but now, `hash(1234) % 4 = 0` so that data instead needs to be moved to database 0.
 
@@ -100,7 +103,7 @@ Imagine a database went down. This could be due to anything from a hardware fail
 
 Our hash function now changes from `database_id = hash(event_id) % 3` to `database_id = hash(event_id) % 2` and we run into the exact same redistribution problem we had before.
 
-![](https://www.hellointerview.com/_next/static/fa82ee480678dbacb996c0c60be1003c.svg)
+![Issue removing a Node](https://www.hellointerview.com/_next/static/fa82ee480678dbacb996c0c60be1003c.svg)
 
 Clearly simple modulo hashing isn't cutting it. Enter, **Consistent Hashing**.
 
@@ -120,7 +123,7 @@ Here's how it works:
 3. In order to know which database an event should be stored on, we first hash the event ID like we did before, but instead of using modulo, we just find the hash value on the ring and then move clockwise until we find a database instance.
 
 
-![](https://www.hellointerview.com/_next/static/cc014afe6b510999d3b6febe6c844e40.svg)
+![Hash Ring](https://www.hellointerview.com/_next/static/cc014afe6b510999d3b6febe6c844e40.svg)
 
 In reality, a hash ring usually has a hash space of 0 to 2^32 - 1 not 0-100, but the concept is the same.
 
@@ -136,7 +139,7 @@ Let's say we add a fifth database at position 90 on our ring. Now:
 * All other events stay exactly where they are!
 
 
-![](https://www.hellointerview.com/_next/static/ba09de370fc43bfaaad4fe458de0419e.svg)
+![Hash Ring with DB5 added](https://www.hellointerview.com/_next/static/ba09de370fc43bfaaad4fe458de0419e.svg)
 
 Whereas before almost all data needed to be redistributed, with consistent hashing, we're only moving about 1/4 of the events that were on DB4, or roughly 1/16th of all our events.
 
@@ -150,7 +153,7 @@ Similarly, if Database 2 (at position 25) fails:
 * Everything else stays put
 
 
-![](https://www.hellointerview.com/_next/static/9ea0c390aa607916db34986bf45c0d8c.svg)
+![Hash Ring with DB2 removed](https://www.hellointerview.com/_next/static/9ea0c390aa607916db34986bf45c0d8c.svg)
 
 
 #### Virtual Nodes
@@ -161,7 +164,7 @@ We've made good progress, but there is still just one problem. In our example ab
 
 The solution is to use what are called "virtual nodes". Instead of putting each database at just one point on the ring, we put it at multiple points by hashing different variations of the database name.
 
-![](https://www.hellointerview.com/_next/static/69e17e6cd34ab1340477cfd652d4ee5f.svg)
+![Hash Ring with Virtual Nodes](https://www.hellointerview.com/_next/static/69e17e6cd34ab1340477cfd652d4ee5f.svg)
 
 For example, instead of just hashing "DB1" to get position 0, we hash "DB1-vn1", "DB1-vn2", "DB1-vn3", etc., which might give us positions 15, 25, 40 and so on. We do this for each database, which results in the virtual nodes being naturally intermixed around the ring.
 

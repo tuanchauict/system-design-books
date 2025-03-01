@@ -203,6 +203,7 @@ The API for viewing events is straightforward. We create a simple GET endpoint t
 
 
 
+
 ```ecl
 GET /events/:eventId -> Event & Venue & Performer & Ticket[]
 
@@ -227,6 +228,7 @@ Next, for search, we just need a single GET endpoint that takes in a set of sear
 
 
 
+
 ```ecl
 GET /events/search?keyword={keyword}&start={start_date}&end={end_date}&pageSize={page_size}&page={page_number} -> Event[]
 ```
@@ -242,6 +244,7 @@ When it comes to purchasing/booking a ticket, we have a post endpoint that takes
 
 
 Later in the design, we'll evolve this into two separate endpoints - one for reserving a ticket and one for confirming a purchase, but this is a good starting point.
+
 
 
 
@@ -716,6 +719,7 @@ Long wait times in the queue might lead to user frustration, especially if the e
 
 
 Our current search implementation is not going to cut it. Queries to search for events based on keywords in the name, description, or other fields will require a full table scan because of the wildcard in the `LIKE` clause. This can be very slow, especially as the number of events grows.
+
 
 
 

@@ -170,6 +170,7 @@ For our first requirement, we need to create posts:
 
 
 
+
 ```text
 POST /post/create
 Request: 
@@ -198,6 +199,7 @@ Moving on, we need to be able to follow people.
 
 
 
+
 ```tsql
 POST /user/[id]/follow
 Request: 
@@ -217,6 +219,7 @@ Here the follow action is binary. We'll assume it's idempotent so it doesn't fai
 
 
 Our last requirement is to be able to view our feed.
+
 
 
 

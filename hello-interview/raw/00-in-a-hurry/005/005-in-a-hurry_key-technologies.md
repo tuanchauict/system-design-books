@@ -321,6 +321,7 @@ Sometimes you're tasked with implementing full-text search as a feature of your 
 
 
 
+
 ```sql
 SELECT * FROM documents WHERE document_text LIKE '%search_term%'
 ```
@@ -336,6 +337,7 @@ This query is slow and inefficient, and it doesn't scale well because it require
 
 
 Search optimized databases, on the other hand, are specifically designed to handle full-text search. They use techniques like indexing, tokenization, and stemming to make search queries fast and efficient. In short, they work by building what are called [inverted indexes](/learn/system-design/deep-dives/elasticsearch#lucene-segment-features). Inverted indexes are a data structure that maps from words to the documents that contain them. This allows you to quickly find documents that contain a given word. A simple example of an inverted index might look like this:
+
 
 
 

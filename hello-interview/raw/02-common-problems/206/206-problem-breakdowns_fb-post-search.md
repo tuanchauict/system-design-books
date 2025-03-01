@@ -172,6 +172,7 @@ First let’s look at the volume of writes:
 
 
 
+
 ```scdoc
 Posts created: 1B * 1 post/day / (100k seconds/day) = 10k posts/second
 Likes created: 1B * 10 likes/day / (100k seconds/day) = 100k likes/second
@@ -191,6 +192,7 @@ Now let’s look at reads.
 
 
 
+
 ```actionscript3
 Searches: 1B * 1 search/day / (100k seconds/day) = 10k searches/second
 ```
@@ -206,6 +208,7 @@ While this is a lot (and may burst the 10x this value or more), our system is wr
 
 
 Finally let’s evaluate the storage requirements of the system. First let’s assume Facebook is 10 years old and that the full post metadata is 1kb (probably an overestimate).
+
 
 
 

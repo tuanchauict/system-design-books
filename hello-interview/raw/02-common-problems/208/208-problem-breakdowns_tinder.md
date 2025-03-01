@@ -190,6 +190,7 @@ The first endpoint we need is an endpoint to create a profile for a user. Of cou
 
 
 
+
 ```ecl
 POST /profile
 {
@@ -233,6 +234,7 @@ You might be tempted to proactively consider pagination for the feed endpoint. T
 
 
 We'll also need an endpoint to power swiping:
+
 
 
 
@@ -344,6 +346,7 @@ The easiest thing we can do it just query the database for a list of users that 
 
 
 The simple query would look something like this:
+
 
 
 
@@ -745,6 +748,7 @@ When a user open the app, they want to immediately start swiping. They don't wan
 
 
 As we discussed in our high-level design, our current design has us running a slow query every time we want a new stack of users.
+
 
 
 

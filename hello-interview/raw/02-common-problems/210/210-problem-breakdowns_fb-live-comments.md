@@ -200,6 +200,7 @@ We'll need a simple POST endpoint to create a comment.
 
 
 
+
 ```text
 POST /comments/:liveVideoId
 Header: JWT | SessionToken
@@ -223,6 +224,7 @@ Note that the userId is not passed in the request body. Instead, it is a part of
 
 
 We also need to be able to fetch past comments for a given live video.
+
 
 
 

@@ -126,6 +126,7 @@ First let's look at throughput:
 
 
 
+
 ```cbmbas
 70B views/day / (100k seconds/day) = 700k tps
 ```
@@ -144,6 +145,7 @@ Now, let's talk storage. First we need the number of videos:
 
 
 
+
 ```scdoc
 Videos/Day = 1 hour content/second / (6 minutes content/video) * (100k seconds/day) = 1M videos/day
 Total Videos = 1M videos/day * 365 days/year * 10 years = 3.6B videos
@@ -154,6 +156,7 @@ Total Videos = 1M videos/day * 365 days/year * 10 years = 3.6B videos
 
 
 With that let's estimate how big a naive table of IDs and counts would be:
+
 
 
 
@@ -260,6 +263,7 @@ From a conceptual perspective this problem is straightforward so we're not going
 
 
 Our API guides the rest of the interview, but in this case it's really basic too! We simply need an API to retrieve the top K videos.
+
 
 
 

@@ -503,6 +503,7 @@ To figure out how many queries for availability we might have, we'll back in fro
 
 
 
+
 ```actionscript3
 Queries: 10M orders/day / (100k seconds/day) * 10 / 0.05 = 20k queries/second
 ```

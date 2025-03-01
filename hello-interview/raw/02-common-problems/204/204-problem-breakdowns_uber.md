@@ -192,6 +192,7 @@ The API for retrieving a fare estimate is straightforward. We define a simple PO
 
 
 
+
 ```ecl
 POST /fare -> Fare
 Body: {
@@ -205,6 +206,7 @@ Body: {
 
 
 **Request Ride Endpoint:** This endpoint is used by riders to confirm their ride request after reviewing the estimated fare. It initiates the ride matching process by signaling the backend to find a suitable driver, thus creating a new ride object.
+
 
 
 
@@ -233,6 +235,7 @@ Note that at this point in the flow, we match them with a driver who is nearby a
 
 
 
+
 ```ecl
 POST /drivers/location -> Success/Error
 Body: {
@@ -257,6 +260,7 @@ Always consider the security implications of your API. I regularly see candidate
 
 
 **Accept Ride Request Endpoint:** This endpoint allows drivers to accept a ride request. Upon acceptance, the system updates the ride status and provides the driver with the pickup location coordinates.
+
 
 
 
