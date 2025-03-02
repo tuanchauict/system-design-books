@@ -153,7 +153,7 @@ Identifying where to spend more and less time in a system design interview based
 
 Setting a key-value pair:
 
-```text
+```rest
 POST /:key
 {
   "value": "..."
@@ -162,13 +162,13 @@ POST /:key
 
 Getting a key-value pair:
 
-```ecl
+```rest
 GET /:key -> {value: "..."}
 ```
 
 Deleting a key-value pair:
 
-```text
+```rest
 DELETE /:key
 ```
 
