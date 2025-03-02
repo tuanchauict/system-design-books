@@ -1,8 +1,10 @@
+import hashlib
 from markdownify import markdownify as md
 from markdownify import MarkdownConverter
 from bs4 import BeautifulSoup, Tag
 from os import path
 from pygments.lexers import guess_lexer, ClassNotFound
+import time
 
 
 class MyConverter(MarkdownConverter):
@@ -199,6 +201,7 @@ def parse_all(converter: MarkdownConverter, file_path: str):
     
     output_file = file_path.replace('.html', '.md')
     with open(output_file, 'w') as f:
+        f.write(f'<!-- {get_hash(file_path)} -->\n')
         
         f.write(f'{title}\n')
         f.write('=' * len(title))
@@ -215,20 +218,48 @@ def parse_all(converter: MarkdownConverter, file_path: str):
             # print(parse_one(converter, child))
             f.write(parse_one(converter, child))
             f.write('\n\n')
+            
+
+def should_parse(filepath: str):
+    if not filepath.endswith('.html'):
+        return False
+    html_filepath = filepath
+    if not os.path.exists(html_filepath.replace('.html', '.md')):
+        return True
+    
+    hash = get_hash(html_filepath)
+    
+    with open(html_filepath.replace('.html', '.md'), 'r') as f:
+        if f.readline().strip() != f'<!-- {hash} -->':
+            return True
+    return False
+    
+
+def get_hash(file_path: str):
+    md5_hash = hashlib.md5()
+    with open(file_path, 'rb') as f:
+        for chunk in iter(lambda: f.read(4096), b''):
+            md5_hash.update(chunk)
+    return md5_hash.hexdigest()
+
 
 if __name__ == '__main__':
+    converter = MyConverter()
     import os
     # Retrieve all html files in the raw folder including subfolders and parse them
     for root, dirs, files in os.walk('./raw'):
         for file in files:
-            if file.endswith('.html'):
-                print("=" * 100)
-                file_path = os.path.join(root, file)
+            file_path = os.path.join(root, file)
+            if not should_parse(file_path):
+                continue
+            
+            print("=" * 100)
+            file_path = os.path.join(root, file)
+            print(file_path)
+            try:
+                parse_all(converter, file_path)
+            except Exception as e:
                 print(file_path)
-                try:
-                    parse_all(MyConverter(), file_path)
-                except Exception as e:
-                    print(file_path)
-                    raise e
+                raise e
     
     
