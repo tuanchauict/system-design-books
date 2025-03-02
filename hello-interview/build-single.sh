@@ -17,7 +17,7 @@ file=${matches[0]}
 # filename without .md extension
 filename=$(basename -- "$file" .md)
 path=$(dirname -- "$file")
-title=$(head -n 1 "$file")
+title=$(sed -n '2p' "$file")
 
 echo $filename
 echo $title 
