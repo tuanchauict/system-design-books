@@ -98,7 +98,6 @@ def preprocess(file_path: str, html_str: str):
         div.name = 'blockquote'
         div.attrs = {'class': 'warning'}
     
-    
     # Replace all div with class `MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded Mui-expanded MuiAccordion-gutters mui-ifi55z` with blockquote and solution.bad class
     for div in soup.find_all('div', class_='MuiPaper-root MuiPaper-elevation MuiPaper-rounded MuiPaper-elevation0 MuiAccordion-root MuiAccordion-rounded MuiAccordion-gutters mui-ifi55z'):
         div.name = 'blockquote'
@@ -201,7 +200,7 @@ def parse_all(converter: MarkdownConverter, file_path: str):
     
     output_file = file_path.replace('.html', '.md')
     with open(output_file, 'w') as f:
-        f.write(f'<!-- {get_hash(file_path)} -->\n')
+        f.write(f'{get_hash(file_path)}\n')
         
         f.write(f'{title}\n')
         f.write('=' * len(title))
@@ -227,10 +226,8 @@ def should_parse(filepath: str):
     if not os.path.exists(html_filepath.replace('.html', '.md')):
         return True
     
-    hash = get_hash(html_filepath)
-    
     with open(html_filepath.replace('.html', '.md'), 'r') as f:
-        if f.readline().strip() != f'<!-- {hash} -->':
+        if f.readline().strip() != get_hash(html_filepath):
             return True
     return False
     
@@ -240,7 +237,7 @@ def get_hash(file_path: str):
     with open(file_path, 'rb') as f:
         for chunk in iter(lambda: f.read(4096), b''):
             md5_hash.update(chunk)
-    return md5_hash.hexdigest()
+    return f'<!-- {md5_hash.hexdigest()} -->'
 
 
 if __name__ == '__main__':
@@ -261,5 +258,3 @@ if __name__ == '__main__':
             except Exception as e:
                 print(file_path)
                 raise e
-    
-    

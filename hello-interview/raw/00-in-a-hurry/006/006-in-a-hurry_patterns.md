@@ -1,3 +1,4 @@
+<!-- f2bfa8dc37102f43c9ff745e6dfb9e79 -->
 Patterns
 ========
 
