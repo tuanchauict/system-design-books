@@ -438,7 +438,7 @@ Given that the swipe interaction is so effortless, we can assume we're going to 
 
 
 
-[Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) is a good fit as a database here. We can partition by swiping\_user\_id. This means an access pattern to see if user A swiped on user B will be fast, because we can predictably query a single partition for that data. Additionally, Cassandra is extremely capable of massive writes, due to its write-optimized storage engine (CommitLog + Memtables + SSTables). A con of using Cassandra here is the element of eventual consistency of swipe data we inherit from using it. We'll discuss ways to avoid this con in later deep dives.
+[Cassandra](https://www.hellointerview.com/learn/system-design/deep-dives/cassandra) is a good fit as a database here. We can partition by `swiping_user_id`. This means an access pattern to see if user A swiped on user B will be fast, because we can predictably query a single partition for that data. Additionally, Cassandra is extremely capable of massive writes, due to its write-optimized storage engine (CommitLog + Memtables + SSTables). A con of using Cassandra here is the element of eventual consistency of swipe data we inherit from using it. We'll discuss ways to avoid this con in later deep dives.
 
 
 
@@ -679,7 +679,7 @@ The key insight remains the same as before - we need swipes between the same use
 
 The key:value structure we'll use is as follows:
 
-```scdoc
+```json
 Key: "swipes:123:456"
 Value: {
     "123_swipe": "right", // or yes/no
