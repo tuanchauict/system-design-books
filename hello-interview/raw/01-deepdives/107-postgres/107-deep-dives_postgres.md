@@ -166,7 +166,7 @@ By default, PostgreSQL will create a B-tree index on your primary key column, bu
 
 
 
-```scdoc
+```sql
 -- This is your bread and butter index
 CREATE INDEX idx_users_email ON users(email);
 
@@ -356,7 +356,7 @@ Covering indexes can make queries significantly faster because PostgreSQL can sa
 
 Sometimes you only need to index a subset of your data. For example, in our social media platform, most queries are probably looking for active users, not deleted ones:
 
-```scdoc
+```sql
 -- Standard index indexes everything
 CREATE INDEX idx_users_email ON users(email);  -- Indexes ALL users
 
@@ -499,7 +499,7 @@ This pattern works especially well for handling activity logging, analytics even
 
 For large tables, partitioning can improve both read and write performance by splitting data across multiple physical tables. The most common use case is time-based partitioning. Going back to our social media example, let's say we have a posts table that grows by millions of rows per month:
 
-```googlesql
+```sql
 CREATE TABLE posts (
     id SERIAL,
     user_id INT,
@@ -615,7 +615,7 @@ One of the most common points of discussion in interviews ends up being around t
 
 Let's consider a simple example where we need to transfer money between two bank accounts. We need to ensure that if we deduct money from one account, it must be added to the other account. Neither operation can happen in isolation:
 
-```componentpascal
+```sql
 BEGIN;
 UPDATE accounts SET balance = balance - 100 WHERE id = 1;
 UPDATE accounts SET balance = balance + 100 WHERE id = 2;
@@ -689,7 +689,7 @@ So when you need to ensure that two operations happen atomically, you'll want to
 **2. Higher Isolation Level**
 Alternatively, we can use a stricter isolation level:
 
-```componentpascal
+```sql
 BEGIN;
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
@@ -832,7 +832,7 @@ At its core, PostgreSQL stores data in tables (also called relations). Think of 
 
 Let's look at a concrete example. Imagine we're designing a social media platform. We might have a `users` table that looks like this:
 
-```googlesql
+```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
@@ -853,7 +853,7 @@ When a new user signs up, we create a new row in this table. Each user gets a un
 
 But users aren't much fun by themselves. They need to be able to post content. Here's where the "relational" part of relational databases comes in. We can create a `posts` table that's connected to our users:
 
-```scdoc
+```sql
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
@@ -883,7 +883,7 @@ In your interview, being able to explain these relationships is crucial. There a
 
 Now, what if we want users to be able to like posts? This introduces a many-to-many relationship - one user can like many posts, and one post can be liked by many users. We handle this with what's called a join table:
 
-```scdoc
+```sql
 CREATE TABLE likes (
     user_id INTEGER REFERENCES users(id),
     post_id INTEGER REFERENCES posts(id),
@@ -921,7 +921,7 @@ Imagine you're transferring $100 from your savings to your checking account. Thi
 1. Deduct $100 from savings
 2. Add $100 to checking
 
-```componentpascal
+```sql
 BEGIN;
   UPDATE accounts SET balance = balance - 100 WHERE account_id = 'savings';
   UPDATE accounts SET balance = balance + 100 WHERE account_id = 'checking';
@@ -942,7 +942,7 @@ In your interview, emphasize how atomicity prevents partial failures. Without it
 
 Consistency ensures that transactions can only bring the database from one valid state to another. For example, let's say we have a rule that account balances can't go negative:
 
-```scdoc
+```sql
 CREATE TABLE accounts (
     account_id TEXT PRIMARY KEY,
     balance DECIMAL CHECK (balance >= 0),
@@ -964,7 +964,7 @@ Confusingly, consistency in ACID has a slightly different meaning than consisten
 
 Isolation levels determine how transactions can interact with data that's being modified by other concurrent transactions. PostgreSQL supports four isolation levels, each preventing different types of phenomena:
 
-```componentpascal
+```sql
 BEGIN;
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;  -- Default level
 -- or REPEATABLE READ
@@ -1028,7 +1028,7 @@ SQL commands fall into four main categories:
    
    * Creates and modifies database structure
    * Examples: `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`
-   ```text
+   ```sql
    CREATE TABLE users (
      id SERIAL PRIMARY KEY,
      email VARCHAR(255) UNIQUE
@@ -1061,7 +1061,7 @@ SQL commands fall into four main categories:
    
    * Manages transactions
    * Examples: `BEGIN`, `COMMIT`, `ROLLBACK`
-   ```componentpascal
+   ```sql
    BEGIN;
      -- Multiple operations...
    COMMIT;

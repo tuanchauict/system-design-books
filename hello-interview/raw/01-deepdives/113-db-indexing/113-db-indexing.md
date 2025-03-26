@@ -105,7 +105,7 @@ B-trees are everywhere in modern databases. PostgreSQL uses them for almost ever
 When you create a table like this in PostgreSQL:
 
 
-```text
+```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE
@@ -123,7 +123,7 @@ Even MongoDB, with its document model, uses B-trees (specifically B+ trees, a va
 When you create an index in MongoDB like this:
 
 
-```text
+```sql
 db.users.createIndex({ "email": 1 });
 ```
 
@@ -180,7 +180,7 @@ Here's an interesting quirk of system design interviews: while geospatial indexe
 #### The Challenge with Location Data
 
 Let's say we're building a restaurant discovery app like Yelp. We have millions of restaurants in our database, each with a latitude and longitude. A user opens the app and wants to find "restaurants within 5 miles of me." Seems simple enough, right?The naive approach would be to use standard B-tree indexes on latitude and longitude:
-```scdoc
+```sql
 CREATE TABLE restaurants (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
@@ -250,7 +250,7 @@ doc3: "B-trees handle range queries well"
 ```
 
 The inverted index creates a mapping:
-```tsql
+```sql
 b-trees  -> [doc1, doc3]
 fast     -> [doc1, doc2]
 reliable -> [doc1]
@@ -332,7 +332,7 @@ The order of columns in a composite index is crucial. Our index on (user\_id, cr
 ### Covering Indexes
 
 A covering index is one that includes all the columns needed by your query - not just the columns you're filtering or sorting on. Think about showing a social media feed with post timestamps and like counts. With a regular index on `(user_id, created_at)`, the database first finds matching posts in the index, then has to fetch each post's full data page just to get the like count. That's a lot of extra disk reads just to display a number.By including the likes column directly in our index, we can skip those expensive page lookups entirely. The database can return everything we need straight from the index itself:
-```googlesql
+```sql
 CREATE TABLE posts (
     id SERIAL PRIMARY KEY,
     user_id INT,
